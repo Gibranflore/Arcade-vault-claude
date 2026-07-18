@@ -13,10 +13,35 @@
   --color-vault-bg: #0a0a0f;
   --color-vault-panel: #12121a;
   --color-vault-border: #1e1e2e;
+  --color-neon-cyan: #00f5ff;
+  --color-neon-magenta: #ff006e;
+  --color-neon-yellow: #f5ff00;
+  --color-neon-green: #39ff14;
 
   /* Fonts */
   --font-pixel: var(--font-press-start), monospace;
   --font-mono: var(--font-courier-prime), monospace;
+
+  /* Animations */
+  --animate-flicker: flicker 3s linear infinite;
+  --animate-flicker-slow: flicker 6s linear infinite;
+  --animate-pulse-glow: pulseGlow 2s ease-in-out infinite;
+  --animate-stagger-in: staggerIn 0.4s ease-out forwards;
+}
+
+@keyframes flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+  20%, 22%, 24%, 55% { opacity: 0.6; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 10px var(--glow, rgba(0, 245, 255, 0.3)); }
+  50% { box-shadow: 0 0 25px var(--glow, rgba(0, 245, 255, 0.3)); }
+}
+
+@keyframes staggerIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @layer base {

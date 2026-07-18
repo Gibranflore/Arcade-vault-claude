@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Press_Start_2P, Courier_Prime } from "next/font/google";
+import { AuthProvider } from "@/app/lib/auth";
+import { AppChrome } from "@/app/components/AppChrome";
 import "./globals.css";
 
 const pressStart2P = Press_Start_2P({
@@ -29,7 +31,11 @@ export default function RootLayout({
       lang="es"
       className={`${pressStart2P.variable} ${courierPrime.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <AuthProvider>
+          <AppChrome>{children}</AppChrome>
+        </AuthProvider>
+      </body>
     </html>
   );
 }
