@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { sendContactMessage } from '@/app/lib/actions/contact';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type HighlightKind = 'HEART' | 'BROWSER' | 'PLANT';
 
@@ -98,18 +101,38 @@ function Reveal({ children, className = '' }: { children: React.ReactNode; class
 }
 
 export function About() {
-  const [form, setForm] = useState({ name: '', email: '', msg: '' });
+  const [form, setForm] = useState({ name: '', email: '', msg: '', honeypot: '' });
   const [sent, setSent] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const onSubmit = (e: FormEvent) => {
+  const triggerShake = () => {
+    setShake(true);
+    setTimeout(() => setShake(false), 400);
+  };
+
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim() || !form.msg.trim()) {
-      setShake(true);
-      setTimeout(() => setShake(false), 400);
+      triggerShake();
       return;
     }
-    setSent(form.name.trim());
+    if (!EMAIL_RE.test(form.email.trim())) {
+      triggerShake();
+      return;
+    }
+
+    setPending(true);
+    setError(null);
+    const result = await sendContactMessage(form);
+    setPending(false);
+
+    if (result.ok) {
+      setSent(form.name.trim());
+    } else {
+      setError(result.error);
+    }
   };
 
   return (
@@ -204,6 +227,16 @@ export function About() {
           >
             {!sent ? (
               <>
+                <input
+                  type="text"
+                  name="honeypot"
+                  value={form.honeypot}
+                  onChange={(e) => setForm({ ...form, honeypot: e.target.value })}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  className="absolute -left-[9999px] w-px h-px opacity-0"
+                />
                 <div className="flex flex-col gap-1.5 mb-4">
                   <label className="font-mono text-[10px] uppercase tracking-[0.16em] text-gray-500">Nombre</label>
                   <input
@@ -235,9 +268,10 @@ export function About() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-4 font-pixel text-xs tracking-[0.2em] uppercase text-neon-cyan border border-neon-cyan transition-all hover:shadow-[0_0_15px_rgba(0,245,255,0.4)] active:scale-[0.99]"
+                  disabled={pending}
+                  className="w-full py-4 font-pixel text-xs tracking-[0.2em] uppercase text-neon-cyan border border-neon-cyan transition-all hover:shadow-[0_0_15px_rgba(0,245,255,0.4)] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
                 >
-                  ▶ Enviar mensaje
+                  {pending ? 'Enviando…' : '▶ Enviar mensaje'}
                 </button>
               </>
             ) : (
