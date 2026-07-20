@@ -1,6 +1,6 @@
 # Spec 03 — Envío real de correo en el formulario de contacto (Resend)
 
-- **Estado:** Aprobado
+- **Estado:** Implementado
 - **Dependencias:** Spec 02 (página `/about` con formulario de contacto simulado)
 - **Fecha:** 2026-07-20
 
@@ -64,17 +64,17 @@ Variables de entorno (no son datos de la app, pero se documentan aquí por ser n
 
 ## Criterios de aceptación
 
-- [ ] `npm run dev` levanta la app y `/about` renderiza sin errores.
-- [ ] Enviar el formulario con `name`, `email` o `msg` vacíos dispara `shake` y no invoca la Server Action.
-- [ ] Enviar el formulario con un email de formato inválido (ej. `sinarroba.com`) dispara `shake` y no invoca la Server Action.
-- [ ] Enviar el formulario con los 3 campos válidos deshabilita el botón y muestra "Enviando…" mientras se espera la respuesta.
-- [ ] Un envío exitoso muestra el panel de éxito (terminal verde) existente, y el correo llega realmente a `CONTACT_EMAIL_TO` con el nombre, email y mensaje ingresados.
-- [ ] Si la Server Action retorna `{ ok: false }` (ej. API key inválida), se muestra el nuevo panel de error (terminal rojo) en vez del panel de éxito, sin perder lo escrito en el formulario.
-- [ ] Desde el panel de error, el usuario puede volver a intentar el envío sin recargar la página.
-- [ ] Si el campo honeypot llega con contenido (simulado manualmente), la Server Action retorna `{ ok: true }` pero no se envía ningún correo real vía Resend.
-- [ ] `RESEND_API_KEY` y `CONTACT_EMAIL_TO` no aparecen en ningún archivo committeado (solo en `.env.local`, gitignored); `.env.example` documenta ambas claves vacías.
-- [ ] `npm run lint` pasa sin errores nuevos.
-- [ ] Verificación funcional con Playwright realizada: envío real observado end-to-end (carga → éxito y/o error) antes de cerrar el spec.
+- [x] `npm run dev` levanta la app y `/about` renderiza sin errores.
+- [x] Enviar el formulario con `name`, `email` o `msg` vacíos dispara `shake` y no invoca la Server Action.
+- [x] Enviar el formulario con un email de formato inválido (ej. `sinarroba.com`) dispara `shake` y no invoca la Server Action.
+- [x] Enviar el formulario con los 3 campos válidos deshabilita el botón y muestra "Enviando…" mientras se espera la respuesta.
+- [x] Un envío exitoso muestra el panel de éxito (terminal verde) existente, y el correo llega realmente a `CONTACT_EMAIL_TO` con el nombre, email y mensaje ingresados.
+- [x] Si la Server Action retorna `{ ok: false }` (ej. API key inválida), se muestra el nuevo panel de error (terminal rojo) en vez del panel de éxito, sin perder lo escrito en el formulario.
+- [x] Desde el panel de error, el usuario puede volver a intentar el envío sin recargar la página.
+- [x] Si el campo honeypot llega con contenido (simulado manualmente), la Server Action retorna `{ ok: true }` pero no se envía ningún correo real vía Resend.
+- [x] `RESEND_API_KEY` y `CONTACT_EMAIL_TO` no aparecen en ningún archivo committeado (solo en `.env.local`, gitignored); `.env.example` documenta ambas claves vacías.
+- [x] `npm run lint` pasa sin errores nuevos.
+- [x] Verificación funcional con Playwright realizada: envío real observado end-to-end (carga → éxito y/o error) antes de cerrar el spec.
 
 ## Decisiones tomadas y descartadas
 
