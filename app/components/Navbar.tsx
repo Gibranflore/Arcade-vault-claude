@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Gamepad2, Menu, X, Trophy, Library, LogIn, LogOut, User as UserIcon } from 'lucide-react';
+import { Gamepad2, Menu, X, Trophy, Library, LogIn, LogOut, User as UserIcon, Info } from 'lucide-react';
 import { useAuth } from '@/app/lib/auth';
 
 type NavbarProps = {
@@ -20,6 +20,7 @@ export function Navbar({ onOpenAuth }: NavbarProps) {
   const navItems: { href: string; label: string; icon: typeof Library; active: boolean }[] = [
     { href: '/', label: 'Biblioteca', icon: Library, active: pathname === '/' },
     { href: '/salon-de-la-fama', label: 'Salón de la Fama', icon: Trophy, active: pathname === '/salon-de-la-fama' },
+    { href: '/about', label: 'Acerca de', icon: Info, active: pathname === '/about' },
   ];
 
   return (
