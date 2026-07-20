@@ -225,7 +225,7 @@ export function About() {
             onSubmit={onSubmit}
             className={`relative bg-vault-panel border border-vault-border p-7 ${shake ? 'animate-shake' : ''}`}
           >
-            {!sent ? (
+            {!sent && !error ? (
               <>
                 <input
                   type="text"
@@ -274,6 +274,35 @@ export function About() {
                   {pending ? 'Enviando…' : '▶ Enviar mensaje'}
                 </button>
               </>
+            ) : error ? (
+              <div className="bg-black border border-red-500 overflow-hidden" style={{ boxShadow: '0 0 22px rgba(239,68,68,0.25)' }}>
+                <div className="flex items-center gap-2 px-3 py-2 bg-vault-bg border-b border-vault-border">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#ff5f56' }} />
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#ffbd2e' }} />
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#27c93f' }} />
+                  <span className="ml-2 font-pixel text-[9px] tracking-[0.14em] text-gray-500">VAULT-OS // TERMINAL</span>
+                </div>
+                <div className="p-5 font-mono text-sm leading-[1.8] text-red-500">
+                  <div>
+                    <span className="text-neon-cyan mr-2">vault@arcade:~$</span>./send_message --to=team
+                  </div>
+                  <div className="text-gray-500">[OK] Conectando con servidor…</div>
+                  <div className="text-gray-500">[FAIL] Transmisión fallida.</div>
+                  <div className="mt-3 font-bold" style={{ textShadow: '0 0 6px rgba(239,68,68,0.45)' }}>
+                    &gt; ERROR: {error}
+                    <span className="animate-pulse">_</span>
+                  </div>
+                  <div className="mt-5">
+                    <button
+                      type="button"
+                      onClick={() => setError(null)}
+                      className="px-4 py-2.5 font-pixel text-[10px] uppercase tracking-wide text-gray-400 border border-gray-600 transition-colors hover:text-white"
+                    >
+                      Reintentar
+                    </button>
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="bg-black border border-neon-green overflow-hidden" style={{ boxShadow: '0 0 22px rgba(57,255,20,0.25)' }}>
                 <div className="flex items-center gap-2 px-3 py-2 bg-vault-bg border-b border-vault-border">
@@ -298,7 +327,7 @@ export function About() {
                       type="button"
                       onClick={() => {
                         setSent(null);
-                        setForm({ name: '', email: '', msg: '' });
+                        setForm({ name: '', email: '', msg: '', honeypot: '' });
                       }}
                       className="px-4 py-2.5 font-pixel text-[10px] uppercase tracking-wide text-gray-400 border border-gray-600 transition-colors hover:text-white"
                     >
