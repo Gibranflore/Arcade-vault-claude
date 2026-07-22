@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { sendContactMessage } from '@/app/lib/actions/contact';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type HighlightKind = 'HEART' | 'BROWSER' | 'PLANT';
 
@@ -98,18 +101,38 @@ function Reveal({ children, className = '' }: { children: React.ReactNode; class
 }
 
 export function About() {
-  const [form, setForm] = useState({ name: '', email: '', msg: '' });
+  const [form, setForm] = useState({ name: '', email: '', msg: '', honeypot: '' });
   const [sent, setSent] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const onSubmit = (e: FormEvent) => {
+  const triggerShake = () => {
+    setShake(true);
+    setTimeout(() => setShake(false), 400);
+  };
+
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim() || !form.msg.trim()) {
-      setShake(true);
-      setTimeout(() => setShake(false), 400);
+      triggerShake();
       return;
     }
-    setSent(form.name.trim());
+    if (!EMAIL_RE.test(form.email.trim())) {
+      triggerShake();
+      return;
+    }
+
+    setPending(true);
+    setError(null);
+    const result = await sendContactMessage(form);
+    setPending(false);
+
+    if (result.ok) {
+      setSent(form.name.trim());
+    } else {
+      setError(result.error);
+    }
   };
 
   return (
@@ -202,8 +225,18 @@ export function About() {
             onSubmit={onSubmit}
             className={`relative bg-vault-panel border border-vault-border p-7 ${shake ? 'animate-shake' : ''}`}
           >
-            {!sent ? (
+            {!sent && !error ? (
               <>
+                <input
+                  type="text"
+                  name="honeypot"
+                  value={form.honeypot}
+                  onChange={(e) => setForm({ ...form, honeypot: e.target.value })}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  className="absolute -left-[9999px] w-px h-px opacity-0"
+                />
                 <div className="flex flex-col gap-1.5 mb-4">
                   <label className="font-mono text-[10px] uppercase tracking-[0.16em] text-gray-500">Nombre</label>
                   <input
@@ -235,11 +268,41 @@ export function About() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-4 font-pixel text-xs tracking-[0.2em] uppercase text-neon-cyan border border-neon-cyan transition-all hover:shadow-[0_0_15px_rgba(0,245,255,0.4)] active:scale-[0.99]"
+                  disabled={pending}
+                  className="w-full py-4 font-pixel text-xs tracking-[0.2em] uppercase text-neon-cyan border border-neon-cyan transition-all hover:shadow-[0_0_15px_rgba(0,245,255,0.4)] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
                 >
-                  ▶ Enviar mensaje
+                  {pending ? 'Enviando…' : '▶ Enviar mensaje'}
                 </button>
               </>
+            ) : error ? (
+              <div className="bg-black border border-red-500 overflow-hidden" style={{ boxShadow: '0 0 22px rgba(239,68,68,0.25)' }}>
+                <div className="flex items-center gap-2 px-3 py-2 bg-vault-bg border-b border-vault-border">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#ff5f56' }} />
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#ffbd2e' }} />
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#27c93f' }} />
+                  <span className="ml-2 font-pixel text-[9px] tracking-[0.14em] text-gray-500">VAULT-OS // TERMINAL</span>
+                </div>
+                <div className="p-5 font-mono text-sm leading-[1.8] text-red-500">
+                  <div>
+                    <span className="text-neon-cyan mr-2">vault@arcade:~$</span>./send_message --to=team
+                  </div>
+                  <div className="text-gray-500">[OK] Conectando con servidor…</div>
+                  <div className="text-gray-500">[FAIL] Transmisión fallida.</div>
+                  <div className="mt-3 font-bold" style={{ textShadow: '0 0 6px rgba(239,68,68,0.45)' }}>
+                    &gt; ERROR: {error}
+                    <span className="animate-pulse">_</span>
+                  </div>
+                  <div className="mt-5">
+                    <button
+                      type="button"
+                      onClick={() => setError(null)}
+                      className="px-4 py-2.5 font-pixel text-[10px] uppercase tracking-wide text-gray-400 border border-gray-600 transition-colors hover:text-white"
+                    >
+                      Reintentar
+                    </button>
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="bg-black border border-neon-green overflow-hidden" style={{ boxShadow: '0 0 22px rgba(57,255,20,0.25)' }}>
                 <div className="flex items-center gap-2 px-3 py-2 bg-vault-bg border-b border-vault-border">
@@ -264,7 +327,7 @@ export function About() {
                       type="button"
                       onClick={() => {
                         setSent(null);
-                        setForm({ name: '', email: '', msg: '' });
+                        setForm({ name: '', email: '', msg: '', honeypot: '' });
                       }}
                       className="px-4 py-2.5 font-pixel text-[10px] uppercase tracking-wide text-gray-400 border border-gray-600 transition-colors hover:text-white"
                     >
