@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/format-and-lint.js",
+            "statusMessage": "Formateando con Prettier y ESLint..."
+          }
+        ]
+      }
+    ]
+  }
+}
