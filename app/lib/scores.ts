@@ -15,18 +15,24 @@ type ScoreQueryRow = {
   user_id: string;
   score: number;
   created_at: string;
-  profiles: { username: string } | null;
 };
 
-function toScoreRow(row: ScoreQueryRow): ScoreRow {
-  return {
-    id: row.id,
-    game_id: row.game_id,
-    player_name: row.profiles?.username ?? "???",
-    score: row.score,
-    user_id: row.user_id,
-    created_at: row.created_at,
-  };
+async function withPlayerNames(rows: ScoreQueryRow[]): Promise<ScoreRow[]> {
+  if (rows.length === 0) return [];
+
+  const supabase = createClient();
+  const userIds = [...new Set(rows.map((r) => r.user_id))];
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, username")
+    .in("id", userIds);
+
+  const usernameById = new Map((profiles ?? []).map((p) => [p.id, p.username]));
+
+  return rows.map((row) => ({
+    ...row,
+    player_name: usernameById.get(row.user_id) ?? "???",
+  }));
 }
 
 export async function getLeaderboard(
@@ -36,13 +42,13 @@ export async function getLeaderboard(
   const supabase = createClient();
   const { data } = await supabase
     .from("scores")
-    .select("id, game_id, user_id, score, created_at, profiles(username)")
+    .select("id, game_id, user_id, score, created_at")
     .eq("game_id", gameId)
     .order("score", { ascending: false })
     .limit(limit)
     .returns<ScoreQueryRow[]>();
 
-  return (data ?? []).map(toScoreRow);
+  return withPlayerNames(data ?? []);
 }
 
 export async function getUserBest(
@@ -52,15 +58,15 @@ export async function getUserBest(
   const supabase = createClient();
   const { data } = await supabase
     .from("scores")
-    .select("id, game_id, user_id, score, created_at, profiles(username)")
+    .select("id, game_id, user_id, score, created_at")
     .eq("game_id", gameId)
     .eq("user_id", userId)
     .order("score", { ascending: false })
     .limit(1)
     .returns<ScoreQueryRow[]>();
 
-  const best = data?.[0];
-  return best ? toScoreRow(best) : null;
+  const rows = await withPlayerNames(data ?? []);
+  return rows[0] ?? null;
 }
 
 export async function submitScore(
