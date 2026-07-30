@@ -1,23 +1,49 @@
-'use client';
+"use client";
 
-import { useRef, useState } from 'react';
-import Link from 'next/link';
-import { Play, Trophy } from 'lucide-react';
-import type { GameDef } from '@/app/lib/games';
-import { getLeaderboard } from '@/app/lib/scores';
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { Play, Trophy } from "lucide-react";
+import type { GameDef } from "@/app/lib/games";
+import { getLeaderboard, type ScoreRow } from "@/app/lib/scores";
 
 const accentMap = {
-  cyan: { text: 'text-neon-cyan', border: 'border-neon-cyan', shadow: 'rgba(0,245,255' },
-  magenta: { text: 'text-neon-magenta', border: 'border-neon-magenta', shadow: 'rgba(255,0,110' },
-  yellow: { text: 'text-neon-yellow', border: 'border-neon-yellow', shadow: 'rgba(245,255,0' },
-  green: { text: 'text-neon-green', border: 'border-neon-green', shadow: 'rgba(57,255,20' },
+  cyan: {
+    text: "text-neon-cyan",
+    border: "border-neon-cyan",
+    shadow: "rgba(0,245,255",
+  },
+  magenta: {
+    text: "text-neon-magenta",
+    border: "border-neon-magenta",
+    shadow: "rgba(255,0,110",
+  },
+  yellow: {
+    text: "text-neon-yellow",
+    border: "border-neon-yellow",
+    shadow: "rgba(245,255,0",
+  },
+  green: {
+    text: "text-neon-green",
+    border: "border-neon-green",
+    shadow: "rgba(57,255,20",
+  },
 };
 
 export function GameCard({ game }: { game: GameDef }) {
   const cardRef = useRef<HTMLAnchorElement>(null);
   const [tilt, setTilt] = useState({ rx: 0, ry: 0 });
-  const highScore = getLeaderboard(game.id, 1)[0] ?? null;
+  const [highScore, setHighScore] = useState<ScoreRow | null>(null);
   const a = accentMap[game.accent];
+
+  useEffect(() => {
+    let cancelled = false;
+    getLeaderboard(game.id, 1).then((result) => {
+      if (!cancelled) setHighScore(result[0] ?? null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [game.id]);
 
   const handleMove = (e: React.MouseEvent) => {
     const el = cardRef.current;
@@ -42,7 +68,7 @@ export function GameCard({ game }: { game: GameDef }) {
       className="card-3d group relative block bg-vault-panel border-2 border-vault-border rounded-lg overflow-hidden cursor-pointer hover:shadow-[0_0_30px_var(--glow)] transition-all duration-300"
       style={{
         transform: `perspective(800px) rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg)`,
-        ['--glow' as string]: `${a.shadow},0.3)`,
+        ["--glow" as string]: `${a.shadow},0.3)`,
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = game.color;
@@ -50,8 +76,8 @@ export function GameCard({ game }: { game: GameDef }) {
       }}
       onMouseLeave={(e) => {
         handleLeave();
-        e.currentTarget.style.borderColor = '';
-        e.currentTarget.style.boxShadow = '';
+        e.currentTarget.style.borderColor = "";
+        e.currentTarget.style.boxShadow = "";
       }}
     >
       {/* Thumbnail */}
@@ -66,12 +92,15 @@ export function GameCard({ game }: { game: GameDef }) {
           className="absolute inset-0 opacity-20"
           style={{
             backgroundImage: `linear-gradient(${game.color}33 1px, transparent 1px), linear-gradient(90deg, ${game.color}33 1px, transparent 1px)`,
-            backgroundSize: '20px 20px',
+            backgroundSize: "20px 20px",
           }}
         />
         <game.icon
           className="w-16 h-16 relative z-10 transition-transform duration-300 group-hover:scale-125"
-          style={{ color: game.color, filter: `drop-shadow(0 0 10px ${game.color})` }}
+          style={{
+            color: game.color,
+            filter: `drop-shadow(0 0 10px ${game.color})`,
+          }}
         />
         {/* Year badge */}
         <span className="absolute top-2 left-2 font-pixel text-[8px] text-gray-400 bg-black/50 px-2 py-1 rounded">
@@ -81,7 +110,9 @@ export function GameCard({ game }: { game: GameDef }) {
         {highScore && (
           <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/60 px-2 py-1 rounded">
             <Trophy className="w-3 h-3 text-neon-yellow" />
-            <span className="font-pixel text-[8px] text-neon-yellow">{highScore.score.toLocaleString()}</span>
+            <span className="font-pixel text-[8px] text-neon-yellow">
+              {highScore.score.toLocaleString()}
+            </span>
           </div>
         )}
       </div>
@@ -89,16 +120,25 @@ export function GameCard({ game }: { game: GameDef }) {
       {/* Content */}
       <div className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-2">
-          <h3 className={`font-pixel text-xs ${a.text} leading-tight`}>{game.title}</h3>
-          <span className="font-mono text-[10px] text-gray-500 uppercase whitespace-nowrap mt-1">{game.category}</span>
+          <h3 className={`font-pixel text-xs ${a.text} leading-tight`}>
+            {game.title}
+          </h3>
+          <span className="font-mono text-[10px] text-gray-500 uppercase whitespace-nowrap mt-1">
+            {game.category}
+          </span>
         </div>
-        <p className="font-mono text-xs text-gray-400 leading-relaxed line-clamp-2">{game.description}</p>
+        <p className="font-mono text-xs text-gray-400 leading-relaxed line-clamp-2">
+          {game.description}
+        </p>
 
         {/* High score label */}
         {highScore && (
           <div className="flex items-center gap-1.5 text-[10px] font-mono text-gray-500">
             <Trophy className="w-3 h-3 text-neon-yellow/70" />
-            <span>MEJOR PUNTUACIÓN: <span className="text-gray-300">{highScore.player_name}</span></span>
+            <span>
+              MEJOR PUNTUACIÓN:{" "}
+              <span className="text-gray-300">{highScore.player_name}</span>
+            </span>
           </div>
         )}
 
@@ -118,19 +158,30 @@ export function ComingSoonCard({ game }: { game: GameDef }) {
     <div className="relative bg-vault-panel/60 border-2 border-vault-border rounded-lg overflow-hidden opacity-60 grayscale cursor-not-allowed select-none">
       <div
         className="relative h-40 sm:h-44 flex items-center justify-center overflow-hidden"
-        style={{ background: `linear-gradient(135deg, ${game.color}22, ${game.color}05, #0a0a0f)` }}
+        style={{
+          background: `linear-gradient(135deg, ${game.color}22, ${game.color}05, #0a0a0f)`,
+        }}
       >
-        <game.icon className="w-16 h-16 relative z-10" style={{ color: game.color }} />
+        <game.icon
+          className="w-16 h-16 relative z-10"
+          style={{ color: game.color }}
+        />
         <span className="absolute top-2 left-2 font-pixel text-[8px] text-gray-400 bg-black/50 px-2 py-1 rounded">
           {game.year}
         </span>
       </div>
       <div className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-pixel text-xs text-gray-300 leading-tight">{game.title}</h3>
-          <span className="font-mono text-[10px] text-gray-500 uppercase whitespace-nowrap mt-1">{game.category}</span>
+          <h3 className="font-pixel text-xs text-gray-300 leading-tight">
+            {game.title}
+          </h3>
+          <span className="font-mono text-[10px] text-gray-500 uppercase whitespace-nowrap mt-1">
+            {game.category}
+          </span>
         </div>
-        <p className="font-mono text-xs text-gray-500 leading-relaxed line-clamp-2">{game.description}</p>
+        <p className="font-mono text-xs text-gray-500 leading-relaxed line-clamp-2">
+          {game.description}
+        </p>
         <span className="btn-pixel w-full text-gray-500 border-2 border-vault-border flex items-center justify-center gap-2">
           PRÓXIMAMENTE
         </span>

@@ -1,15 +1,29 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+import { createClient } from "@/app/lib/supabase/client";
 
-type MockUser = { id: string; email: string; username: string };
+type SupabaseUser = { id: string; email: string; username: string };
 type GuestProfile = { id: string; name: string; isGuest: true };
 
 type AuthContextType = {
-  user: MockUser | null;
+  user: SupabaseUser | null;
   guest: GuestProfile | null;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, username: string) => Promise<{ error: string | null }>;
+  signIn: (
+    email: string,
+    password: string,
+  ) => Promise<{ error: string | null }>;
+  signUp: (
+    email: string,
+    password: string,
+    username: string,
+  ) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   playAsGuest: (name: string) => void;
   displayName: string;
@@ -17,15 +31,10 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Prefijo "mock_" para no chocar con claves de una futura integración real de Supabase.
-const USER_KEY = 'mock_arcade_vault_user';
-const USERS_KEY = 'mock_arcade_vault_users';
-const GUEST_KEY = 'mock_arcade_vault_guest';
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const GUEST_KEY = "mock_arcade_vault_guest";
 
 function readJSON<T>(key: string): T | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(key);
     return raw ? (JSON.parse(raw) as T) : null;
@@ -34,60 +43,78 @@ function readJSON<T>(key: string): T | null {
   }
 }
 
-function getRegisteredUsers(): (MockUser & { password: string })[] {
-  return readJSON(USERS_KEY) ?? [];
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<MockUser | null>(() => readJSON(USER_KEY));
-  const [guest, setGuest] = useState<GuestProfile | null>(() => readJSON(GUEST_KEY));
+  const [supabase] = useState(() => createClient());
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [guest, setGuest] = useState<GuestProfile | null>(() =>
+    readJSON(GUEST_KEY),
+  );
 
-  const signIn: AuthContextType['signIn'] = async (email, password) => {
-    if (!EMAIL_RE.test(email)) return { error: 'Correo inválido' };
-    if (password.length < 6) return { error: 'La contraseña debe tener al menos 6 caracteres' };
+  useEffect(() => {
+    const resolveUser = async (
+      authUser: { id: string; email?: string } | null,
+    ) => {
+      if (!authUser) {
+        setUser(null);
+        return;
+      }
 
-    const users = getRegisteredUsers();
-    const existing = users.find((u) => u.email === email);
-    const account: MockUser = existing
-      ? { id: existing.id, email: existing.email, username: existing.username }
-      : { id: crypto.randomUUID(), email, username: email.split('@')[0] };
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", authUser.id)
+        .single();
 
-    if (!existing) {
-      users.push({ ...account, password });
-      localStorage.setItem(USERS_KEY, JSON.stringify(users));
-    }
+      setUser({
+        id: authUser.id,
+        email: authUser.email ?? "",
+        username: profile?.username ?? "",
+      });
+    };
+
+    supabase.auth.getUser().then(({ data }) => resolveUser(data.user));
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      resolveUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase]);
+
+  const signIn: AuthContextType["signIn"] = async (email, password) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) return { error: error.message };
 
     setGuest(null);
     localStorage.removeItem(GUEST_KEY);
-    setUser(account);
-    localStorage.setItem(USER_KEY, JSON.stringify(account));
     return { error: null };
   };
 
-  const signUp: AuthContextType['signUp'] = async (email, password, username) => {
-    if (username.trim().length < 3) return { error: 'El usuario debe tener al menos 3 caracteres' };
-    if (!EMAIL_RE.test(email)) return { error: 'Correo inválido' };
-    if (password.length < 6) return { error: 'La contraseña debe tener al menos 6 caracteres' };
-
-    const users = getRegisteredUsers();
-    if (users.some((u) => u.email === email)) return { error: 'Este correo ya está registrado' };
-
-    const account: MockUser = { id: crypto.randomUUID(), email, username: username.trim() };
-    users.push({ ...account, password });
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  const signUp: AuthContextType["signUp"] = async (
+    email,
+    password,
+    username,
+  ) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { username: username.trim() } },
+    });
+    if (error) return { error: error.message };
 
     setGuest(null);
     localStorage.removeItem(GUEST_KEY);
-    setUser(account);
-    localStorage.setItem(USER_KEY, JSON.stringify(account));
     return { error: null };
   };
 
   const signOut = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem(USER_KEY);
-    setGuest(null);
-    localStorage.removeItem(GUEST_KEY);
   };
 
   const playAsGuest = (name: string) => {
@@ -96,10 +123,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(GUEST_KEY, JSON.stringify(g));
   };
 
-  const displayName = user?.username ?? guest?.name ?? 'INVITADO';
+  const displayName = user?.username ?? guest?.name ?? "INVITADO";
 
   return (
-    <AuthContext.Provider value={{ user, guest, signIn, signUp, signOut, playAsGuest, displayName }}>
+    <AuthContext.Provider
+      value={{ user, guest, signIn, signUp, signOut, playAsGuest, displayName }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -107,6 +136,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth debe usarse dentro de AuthProvider');
+  if (!ctx) throw new Error("useAuth debe usarse dentro de AuthProvider");
   return ctx;
 }
