@@ -92,6 +92,23 @@ export async function getUserBest(
   return rows[0] ?? null;
 }
 
+export async function getUserRank(
+  gameId: string,
+  userId: string,
+): Promise<number | null> {
+  const best = await getUserBest(gameId, userId);
+  if (!best) return null;
+
+  const supabase = createClient();
+  const { count } = await supabase
+    .from("scores")
+    .select("id", { count: "exact", head: true })
+    .eq("game_id", gameId)
+    .gt("score", best.score);
+
+  return (count ?? 0) + 1;
+}
+
 export async function submitScore(
   gameId: string,
   userId: string,

@@ -1,10 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Trophy, Medal, Crown, Star } from "lucide-react";
 import { GAMES, type GameDef } from "@/app/lib/games";
-import { getLeaderboard, getUserBest, type ScoreRow } from "@/app/lib/scores";
+import {
+  getLeaderboard,
+  getUserBest,
+  getUserRank,
+  type DateRange,
+  type ScoreRow,
+} from "@/app/lib/scores";
 import { useAuth } from "@/app/lib/auth";
+
+const RANGE_OPTIONS: { value: DateRange; label: string }[] = [
+  { value: "today", label: "Hoy" },
+  { value: "week", label: "Semana" },
+  { value: "month", label: "Mes" },
+  { value: "all", label: "Siempre" },
+];
 
 const accentMap = {
   cyan: "text-neon-cyan",
@@ -50,8 +63,10 @@ function getMedalStyle(rank: number): {
 export function HallOfFame() {
   const { user } = useAuth();
   const [selectedGame, setSelectedGame] = useState<GameDef>(GAMES[0]);
+  const [range, setRange] = useState<DateRange>("all");
   const [scores, setScores] = useState<ScoreRow[]>([]);
   const [userBest, setUserBest] = useState<ScoreRow | null>(null);
+  const [userRank, setUserRank] = useState<number | null>(null);
   const [loadedGameId, setLoadedGameId] = useState<string | null>(null);
   const loading = loadedGameId !== selectedGame.id;
 
@@ -59,7 +74,7 @@ export function HallOfFame() {
     let cancelled = false;
 
     Promise.all([
-      getLeaderboard(selectedGame.id, 10),
+      getLeaderboard(selectedGame.id, 10, range),
       user ? getUserBest(selectedGame.id, user.id) : Promise.resolve(null),
     ]).then(([leaderboard, best]) => {
       if (cancelled) return;
@@ -71,13 +86,21 @@ export function HallOfFame() {
     return () => {
       cancelled = true;
     };
-  }, [selectedGame, user]);
+  }, [selectedGame, range, user]);
 
-  const userRank = useMemo(() => {
-    if (!userBest) return null;
-    const idx = scores.findIndex((s) => s.user_id === user?.id);
-    return idx >= 0 ? idx + 1 : null;
-  }, [scores, userBest, user]);
+  useEffect(() => {
+    let cancelled = false;
+
+    Promise.resolve(user ? getUserRank(selectedGame.id, user.id) : null).then(
+      (rank) => {
+        if (!cancelled) setUserRank(rank);
+      },
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedGame, user]);
 
   const a = accentMap[selectedGame.accent];
 
@@ -112,6 +135,23 @@ export function HallOfFame() {
           >
             <g.icon className="w-3.5 h-3.5" />
             {g.title}
+          </button>
+        ))}
+      </div>
+
+      {/* Date range filter */}
+      <div className="flex flex-wrap justify-center gap-2 mb-8">
+        {RANGE_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => setRange(opt.value)}
+            className={`px-3 py-1.5 font-mono text-xs uppercase tracking-wide rounded transition-all active:scale-95 ${
+              range === opt.value
+                ? "text-neon-cyan border border-neon-cyan bg-neon-cyan/10"
+                : "text-gray-400 border border-vault-border hover:border-gray-600"
+            }`}
+          >
+            {opt.label}
           </button>
         ))}
       </div>
