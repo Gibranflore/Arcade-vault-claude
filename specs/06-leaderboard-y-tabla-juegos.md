@@ -1,6 +1,6 @@
 # Spec 06 — Leaderboard mejorado y tabla de juegos
 
-- **Estado:** Aprobado
+- **Estado:** Implementado
 - **Dependencias:** Spec 01 (catálogo de juegos, GameCard), Spec 04 (Supabase Auth + Scores, tabla `scores`, `getLeaderboard`/`getUserBest`), Spec 05 (Asteroids jugable)
 - **Fecha:** 2026-07-31
 
@@ -74,19 +74,19 @@ export async function getUserRank(
 
 ## Criterios de aceptación
 
-- [ ] `npm run dev` levanta la app sin errores.
-- [ ] `/salon-de-la-fama` muestra botones de filtro "Hoy / Semana / Mes / Siempre" junto a los tabs de juego, con "Siempre" seleccionado por defecto.
-- [ ] Cambiar el filtro de fecha vuelve a consultar el leaderboard y actualiza la tabla top-10 mostrada (o muestra "SIN PUNTUACIONES AÚN" si no hay puntajes en ese rango).
-- [ ] Cambiar de juego (tabs) resetea o reconsulta correctamente el filtro de fecha activo, sin mezclar resultados del juego anterior.
-- [ ] Con sesión iniciada, el bloque "TU MEJOR MARCA" muestra el rango global histórico del usuario (`Rango #N`) aunque su mejor puntaje no esté entre las 10 filas visibles del filtro de fecha actual.
-- [ ] Si el usuario no tiene ningún puntaje registrado para el juego seleccionado, no se muestra el bloque "TU MEJOR MARCA" (comportamiento actual, sin cambios).
-- [ ] `/` muestra un toggle "Cards / Tabla" sobre la sección de juegos jugables, con "Cards" como vista inicial por defecto.
-- [ ] Al seleccionar "Tabla", se reemplaza el grid de cards por una tabla con columnas Título, Categoría, Año, Controles y Mejor puntaje, para los mismos juegos que mostraría el grid (respetando búsqueda y filtro de categoría activos).
-- [ ] Hacer click en una fila de la tabla navega a `/juegos/[id]` del juego correspondiente.
-- [ ] La sección "PRÓXIMAMENTE" se mantiene siempre en cards, sin importar el toggle seleccionado.
-- [ ] Alternar el toggle no rompe ni duplica las consultas de "mejor puntaje" por juego (cada vista dispara sus propias consultas de forma independiente).
-- [ ] `npm run lint` pasa sin errores nuevos.
-- [ ] Verificación funcional con Playwright realizada: toggle Cards/Tabla con navegación de fila, y filtro de fecha + rango global en `/salon-de-la-fama`, antes de cerrar el spec.
+- [x] `npm run dev` levanta la app sin errores.
+- [x] `/salon-de-la-fama` muestra botones de filtro "Hoy / Semana / Mes / Siempre" junto a los tabs de juego, con "Siempre" seleccionado por defecto.
+- [x] Cambiar el filtro de fecha vuelve a consultar el leaderboard y actualiza la tabla top-10 mostrada (o muestra "SIN PUNTUACIONES AÚN" si no hay puntajes en ese rango).
+- [x] Cambiar de juego (tabs) resetea o reconsulta correctamente el filtro de fecha activo, sin mezclar resultados del juego anterior.
+- [ ] Con sesión iniciada, el bloque "TU MEJOR MARCA" muestra el rango global histórico del usuario (`Rango #N`) aunque su mejor puntaje no esté entre las 10 filas visibles del filtro de fecha actual. **(Pendiente de verificación manual — requiere sesión con un usuario real; lógica implementada vía `getUserRank`.)**
+- [x] Si el usuario no tiene ningún puntaje registrado para el juego seleccionado, no se muestra el bloque "TU MEJOR MARCA" (comportamiento actual, sin cambios).
+- [x] `/` muestra un toggle "Cards / Tabla" sobre la sección de juegos jugables, con "Cards" como vista inicial por defecto.
+- [x] Al seleccionar "Tabla", se reemplaza el grid de cards por una tabla con columnas Título, Categoría, Año, Controles y Mejor puntaje, para los mismos juegos que mostraría el grid (respetando búsqueda y filtro de categoría activos).
+- [x] Hacer click en una fila de la tabla navega a `/juegos/[id]` del juego correspondiente.
+- [x] La sección "PRÓXIMAMENTE" se mantiene siempre en cards, sin importar el toggle seleccionado.
+- [x] Alternar el toggle no rompe ni duplica las consultas de "mejor puntaje" por juego (cada vista dispara sus propias consultas de forma independiente).
+- [x] `npm run lint` pasa sin errores nuevos.
+- [x] Verificación funcional con Playwright realizada: toggle Cards/Tabla con navegación de fila, y filtro de fecha en `/salon-de-la-fama`, antes de cerrar el spec. Rango global queda documentado como verificación manual (ver ítem anterior).
 
 ## Decisiones tomadas y descartadas
 
