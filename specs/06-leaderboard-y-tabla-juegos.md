@@ -1,6 +1,6 @@
 # Spec 06 — Leaderboard mejorado y tabla de juegos
 
-- **Estado:** Draft
+- **Estado:** Aprobado
 - **Dependencias:** Spec 01 (catálogo de juegos, GameCard), Spec 04 (Supabase Auth + Scores, tabla `scores`, `getLeaderboard`/`getUserBest`), Spec 05 (Asteroids jugable)
 - **Fecha:** 2026-07-31
 

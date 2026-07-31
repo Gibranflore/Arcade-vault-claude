@@ -1,5 +1,20 @@
 import { createClient } from "@/app/lib/supabase/client";
 
+export type DateRange = "today" | "week" | "month" | "all";
+
+function rangeCutoff(range: DateRange): string | null {
+  if (range === "all") return null;
+  const now = new Date();
+  if (range === "today") {
+    now.setHours(0, 0, 0, 0);
+  } else if (range === "week") {
+    now.setDate(now.getDate() - 7);
+  } else if (range === "month") {
+    now.setMonth(now.getMonth() - 1);
+  }
+  return now.toISOString();
+}
+
 export type ScoreRow = {
   id: string;
   game_id: string;
@@ -38,12 +53,20 @@ async function withPlayerNames(rows: ScoreQueryRow[]): Promise<ScoreRow[]> {
 export async function getLeaderboard(
   gameId: string,
   limit = 10,
+  range: DateRange = "all",
 ): Promise<ScoreRow[]> {
   const supabase = createClient();
-  const { data } = await supabase
+  let query = supabase
     .from("scores")
     .select("id, game_id, user_id, score, created_at")
-    .eq("game_id", gameId)
+    .eq("game_id", gameId);
+
+  const cutoff = rangeCutoff(range);
+  if (cutoff) {
+    query = query.gte("created_at", cutoff);
+  }
+
+  const { data } = await query
     .order("score", { ascending: false })
     .limit(limit)
     .returns<ScoreQueryRow[]>();
