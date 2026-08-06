@@ -12,13 +12,25 @@ import {
   Heart,
   Clock,
 } from "lucide-react";
+import type { ComponentType } from "react";
 import type { GameDef } from "@/app/lib/games";
 import { useAuth } from "@/app/lib/auth";
 import { submitScore } from "@/app/lib/scores";
 import { AsteroidsGame } from "@/app/games/AsteroidsGame";
-import type { GameHandle } from "@/app/games/types";
+import { TetrisGame } from "@/app/games/TetrisGame";
+import { BreakoutGame } from "@/app/games/BreakoutGame";
+import type { GameHandle, GameProps } from "@/app/games/types";
 
 type GameState = "idle" | "playing" | "paused" | "over";
+
+// Registry of playable game components, keyed by GameDef.id. To add a new
+// game: implement it under app/games/ following GameProps/GameHandle, then
+// add its entry here — no other changes to this file are needed.
+const GAME_COMPONENTS: Record<string, ComponentType<GameProps>> = {
+  asteroids: AsteroidsGame,
+  tetris: TetrisGame,
+  breakout: BreakoutGame,
+};
 
 const accentMap = {
   cyan: "text-neon-cyan",
@@ -37,6 +49,7 @@ const accentBorderMap = {
 export function GamePlayer({ game }: { game: GameDef }) {
   const { user, displayName } = useAuth();
   const a = accentMap[game.accent];
+  const GameComponent = GAME_COMPONENTS[game.id];
 
   const [gameState, setGameState] = useState<GameState>("idle");
   const [score, setScore] = useState(0);
@@ -97,7 +110,7 @@ export function GamePlayer({ game }: { game: GameDef }) {
     setSaving(false);
   }, [game.id, score, user]);
 
-  if (game.id !== "asteroids") {
+  if (!GameComponent) {
     return (
       <div className="page-enter min-h-[calc(100vh-4rem)] flex flex-col items-center px-4 py-6">
         {/* HUD */}
@@ -261,7 +274,7 @@ export function GamePlayer({ game }: { game: GameDef }) {
           <div className="crt-screen relative bg-black rounded-xl overflow-hidden border border-vault-border">
             {/* Game canvas */}
             <div className="relative aspect-[4/3] sm:aspect-[3/2] flex items-center justify-center">
-              <AsteroidsGame
+              <GameComponent
                 onScore={handleScoreChange}
                 onLives={handleLivesChange}
                 onLevel={handleLevelChange}
