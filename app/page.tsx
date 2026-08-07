@@ -1,22 +1,30 @@
-'use client';
+"use client";
 
-import { useMemo, useState } from 'react';
-import { Search } from 'lucide-react';
-import { GAMES, COMING_SOON_GAMES, type GameCategory } from '@/app/lib/games';
-import { GameCard, ComingSoonCard } from '@/app/components/GameCard';
+import { useMemo, useState } from "react";
+import { LayoutGrid, Search, Table2 } from "lucide-react";
+import { GAMES, COMING_SOON_GAMES, type GameCategory } from "@/app/lib/games";
+import { GameCard, ComingSoonCard } from "@/app/components/GameCard";
+import { GameTable } from "@/app/components/GameTable";
 
-const CATEGORIES: (GameCategory | 'Todos')[] = ['Todos', 'Clásico', 'Acción', 'Puzzle', 'Arcade'];
+const CATEGORIES: (GameCategory | "Todos")[] = [
+  "Todos",
+  "Clásico",
+  "Acción",
+  "Puzzle",
+  "Arcade",
+];
 
 export default function Home() {
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState<GameCategory | 'Todos'>('Todos');
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState<GameCategory | "Todos">("Todos");
+  const [view, setView] = useState<"cards" | "table">("cards");
 
   const filtered = useMemo(() => {
     return GAMES.filter((g) => {
       const matchesSearch =
         g.title.toLowerCase().includes(search.toLowerCase()) ||
         g.description.toLowerCase().includes(search.toLowerCase());
-      const matchesCategory = category === 'Todos' || g.category === category;
+      const matchesCategory = category === "Todos" || g.category === category;
       return matchesSearch && matchesCategory;
     });
   }, [search, category]);
@@ -32,9 +40,18 @@ export default function Home() {
           Inserta una moneda para jugar
         </p>
         <div className="mt-4 flex justify-center gap-2">
-          <span className="w-2 h-2 bg-neon-cyan rounded-full animate-pulse" style={{ boxShadow: '0 0 6px #00f5ff' }} />
-          <span className="w-2 h-2 bg-neon-magenta rounded-full animate-pulse" style={{ animationDelay: '0.3s', boxShadow: '0 0 6px #ff006e' }} />
-          <span className="w-2 h-2 bg-neon-yellow rounded-full animate-pulse" style={{ animationDelay: '0.6s', boxShadow: '0 0 6px #f5ff00' }} />
+          <span
+            className="w-2 h-2 bg-neon-cyan rounded-full animate-pulse"
+            style={{ boxShadow: "0 0 6px #00f5ff" }}
+          />
+          <span
+            className="w-2 h-2 bg-neon-magenta rounded-full animate-pulse"
+            style={{ animationDelay: "0.3s", boxShadow: "0 0 6px #ff006e" }}
+          />
+          <span
+            className="w-2 h-2 bg-neon-yellow rounded-full animate-pulse"
+            style={{ animationDelay: "0.6s", boxShadow: "0 0 6px #f5ff00" }}
+          />
         </div>
       </div>
 
@@ -57,8 +74,8 @@ export default function Home() {
               onClick={() => setCategory(cat)}
               className={`px-4 py-2 font-mono text-xs uppercase tracking-wide rounded transition-all active:scale-95 ${
                 category === cat
-                  ? 'text-neon-cyan border border-neon-cyan bg-neon-cyan/10'
-                  : 'text-gray-400 border border-vault-border hover:border-gray-600'
+                  ? "text-neon-cyan border border-neon-cyan bg-neon-cyan/10"
+                  : "text-gray-400 border border-vault-border hover:border-gray-600"
               }`}
             >
               {cat}
@@ -67,10 +84,40 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Grid */}
-      {filtered.length === 0 ? (
+      {/* View toggle */}
+      <div className="flex justify-center gap-2 mb-6">
+        <button
+          onClick={() => setView("cards")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 font-mono text-xs uppercase tracking-wide rounded transition-all active:scale-95 ${
+            view === "cards"
+              ? "text-neon-cyan border border-neon-cyan bg-neon-cyan/10"
+              : "text-gray-400 border border-vault-border hover:border-gray-600"
+          }`}
+        >
+          <LayoutGrid className="w-3.5 h-3.5" />
+          Cards
+        </button>
+        <button
+          onClick={() => setView("table")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 font-mono text-xs uppercase tracking-wide rounded transition-all active:scale-95 ${
+            view === "table"
+              ? "text-neon-cyan border border-neon-cyan bg-neon-cyan/10"
+              : "text-gray-400 border border-vault-border hover:border-gray-600"
+          }`}
+        >
+          <Table2 className="w-3.5 h-3.5" />
+          Tabla
+        </button>
+      </div>
+
+      {/* Games */}
+      {view === "table" ? (
+        <GameTable games={filtered} />
+      ) : filtered.length === 0 ? (
         <div className="text-center py-20">
-          <p className="font-pixel text-sm text-gray-500">NO SE ENCONTRARON JUEGOS</p>
+          <p className="font-pixel text-sm text-gray-500">
+            NO SE ENCONTRARON JUEGOS
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
@@ -84,8 +131,12 @@ export default function Home() {
       {COMING_SOON_GAMES.length > 0 && (
         <div className="mt-16">
           <div className="text-center mb-6">
-            <h2 className="font-pixel text-lg sm:text-xl text-gray-400">PRÓXIMAMENTE</h2>
-            <p className="font-mono text-xs text-gray-600 mt-2">Más juegos llegando pronto a la bóveda</p>
+            <h2 className="font-pixel text-lg sm:text-xl text-gray-400">
+              PRÓXIMAMENTE
+            </h2>
+            <p className="font-mono text-xs text-gray-600 mt-2">
+              Más juegos llegando pronto a la bóveda
+            </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {COMING_SOON_GAMES.map((game) => (
