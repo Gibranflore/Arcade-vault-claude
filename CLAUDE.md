@@ -26,6 +26,10 @@ There is no test runner configured yet. A Prettier + ESLint `PostToolUse` hook (
 
 These skills are installed under `.claude/skills/` (`spec`, `spec-impl`, `add-game`) — no need to run the `npx skills@latest add Klerith/fernando-skills` install step referenced in the README, it's already done.
 
+## Agents
+
+- `@game-planner` — subagente de proyecto (`.claude/agents/game-planner.md`) que piensa y decide qué juegos nuevos encajan con la plataforma. Solo lectura del repo (más edición de su propio archivo de memoria); no implementa juegos, no toca `games.ts` ni `GamePlayer.tsx`. Mantiene un historial de sugerencias previas en `.claude/agents/game-planner-memory.md` para no repetir ideas entre sesiones. Para construir un juego que sugiera, usar `/add-game` (o `/spec`).
+
 ## Architecture
 
 - Next.js 16.2.10 (App Router) + React 19, TypeScript, Tailwind CSS v4 (via `@tailwindcss/postcss`).
