@@ -1,5 +1,13 @@
 import type { LucideIcon } from "lucide-react";
-import { Gamepad2, Grid3x3, Ghost, Rocket, Blocks, Bug } from "lucide-react";
+import {
+  Gamepad2,
+  Grid3x3,
+  Ghost,
+  Rocket,
+  Blocks,
+  Bug,
+  Car,
+} from "lucide-react";
 
 export type GameCategory = "Clásico" | "Acción" | "Puzzle" | "Arcade";
 
@@ -68,6 +76,19 @@ export const GAMES: GameDef[] = [
     icon: Ghost,
     controls: "Flechas + Espacio",
     year: "1979",
+  },
+  {
+    id: "frogger",
+    title: "FROGGER",
+    description: "Cruza la carretera y el río sin que te aplasten o te coman.",
+    longDescription:
+      "Guía a la rana desde el punto de salida hasta una de las cinco casas meta. Esquiva el tráfico en la carretera y salta sobre troncos en el río sin caer al agua ni pisar la boca de un cocodrilo. Un clásico de arcade de saltos precisos contrarreloj.",
+    category: "Arcade",
+    color: "#00ff41",
+    accent: "green",
+    icon: Car,
+    controls: "Flechas o WASD",
+    year: "1981",
   },
 ];
 

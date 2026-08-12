@@ -19,6 +19,7 @@ import { submitScore } from "@/app/lib/scores";
 import { AsteroidsGame } from "@/app/games/AsteroidsGame";
 import { TetrisGame } from "@/app/games/TetrisGame";
 import { BreakoutGame } from "@/app/games/BreakoutGame";
+import { FroggerGame } from "@/app/games/FroggerGame";
 import type { GameHandle, GameProps } from "@/app/games/types";
 
 type GameState = "idle" | "playing" | "paused" | "over";
@@ -30,6 +31,7 @@ const GAME_COMPONENTS: Record<string, ComponentType<GameProps>> = {
   asteroids: AsteroidsGame,
   tetris: TetrisGame,
   breakout: BreakoutGame,
+  frogger: FroggerGame,
 };
 
 const accentMap = {
