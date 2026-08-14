@@ -1,6 +1,6 @@
 # Spec 07 — Sistema de skins visuales (Asteroids)
 
-- **Estado:** Aprobado
+- **Estado:** Implementado
 - **Dependencias:** Spec 05 (Asteroids jugable)
 - **Fecha:** 2026-08-12
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useSyncExternalStore } from "react";
 import Link from "next/link";
 import {
   Pause,
@@ -21,6 +21,31 @@ import { TetrisGame } from "@/app/games/TetrisGame";
 import { BreakoutGame } from "@/app/games/BreakoutGame";
 import { FroggerGame } from "@/app/games/FroggerGame";
 import type { GameHandle, GameProps } from "@/app/games/types";
+import {
+  ASTEROIDS_SKINS,
+  type AsteroidsSkin,
+} from "@/app/games/asteroidsSkins";
+
+const ASTEROIDS_SKIN_STORAGE_KEY = "skin:asteroids";
+
+function subscribeNoop() {
+  return () => {};
+}
+
+function getStoredAsteroidsSkinId(): AsteroidsSkin["id"] {
+  try {
+    const stored = localStorage.getItem(ASTEROIDS_SKIN_STORAGE_KEY);
+    if (stored && stored in ASTEROIDS_SKINS)
+      return stored as AsteroidsSkin["id"];
+  } catch {
+    // localStorage unavailable (private browsing, etc.) — keep default
+  }
+  return "classic";
+}
+
+function getServerAsteroidsSkinId(): AsteroidsSkin["id"] {
+  return "classic";
+}
 
 type GameState = "idle" | "playing" | "paused" | "over";
 
@@ -60,7 +85,28 @@ export function GamePlayer({ game }: { game: GameDef }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const storedAsteroidsSkinId = useSyncExternalStore(
+    subscribeNoop,
+    getStoredAsteroidsSkinId,
+    getServerAsteroidsSkinId,
+  );
+  const [asteroidsSkinOverride, setAsteroidsSkinOverride] = useState<
+    AsteroidsSkin["id"] | null
+  >(null);
+  const asteroidsSkinId =
+    game.id === "asteroids"
+      ? (asteroidsSkinOverride ?? storedAsteroidsSkinId)
+      : "classic";
   const gameRef = useRef<GameHandle | null>(null);
+
+  const handleSkinChange = useCallback((id: AsteroidsSkin["id"]) => {
+    setAsteroidsSkinOverride(id);
+    try {
+      localStorage.setItem(ASTEROIDS_SKIN_STORAGE_KEY, id);
+    } catch {
+      // localStorage unavailable — skin still applies for this session
+    }
+  }, []);
 
   const handleScoreChange = useCallback((s: number) => setScore(s), []);
   const handleLivesChange = useCallback((l: number) => setLives(l), []);
@@ -235,6 +281,28 @@ export function GamePlayer({ game }: { game: GameDef }) {
               </span>
               <span className="font-pixel text-sm text-white">{level}</span>
             </div>
+            {game.id === "asteroids" && (
+              <div className="flex flex-col items-end">
+                <span className="font-pixel text-[8px] text-gray-500 uppercase">
+                  Skin
+                </span>
+                <span className="flex items-center gap-1">
+                  {Object.values(ASTEROIDS_SKINS).map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => handleSkinChange(s.id)}
+                      className={`px-1.5 py-0.5 font-mono text-[10px] border rounded transition-all active:scale-95 ${
+                        asteroidsSkinId === s.id
+                          ? `${a} border-current`
+                          : "text-gray-500 border-vault-border hover:text-gray-300"
+                      }`}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -285,6 +353,9 @@ export function GamePlayer({ game }: { game: GameDef }) {
                   gameRef.current = handle;
                 }}
                 isPaused={gameState === "paused"}
+                {...(game.id === "asteroids"
+                  ? { skin: ASTEROIDS_SKINS[asteroidsSkinId] }
+                  : {})}
               />
 
               {/* Idle overlay */}

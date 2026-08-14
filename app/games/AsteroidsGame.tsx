@@ -371,12 +371,17 @@ export function AsteroidsGame({
   onGameOver,
   onReady,
   isPaused,
-}: GameProps) {
+  skin = DEFAULT_ASTEROIDS_SKIN,
+}: GameProps & { skin?: AsteroidsSkin }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [running, setRunning] = useState(false);
   const keysRef = useRef<Record<string, boolean>>({});
   const spaceJustPressedRef = useRef(false);
   const stateRef = useRef(createInitialState());
+  const skinRef = useRef(skin);
+  useEffect(() => {
+    skinRef.current = skin;
+  }, [skin]);
 
   const spawnAsteroids = useCallback((count: number) => {
     const s = stateRef.current;
@@ -584,7 +589,7 @@ export function AsteroidsGame({
 
     const draw = () => {
       const s = stateRef.current;
-      const skin = DEFAULT_ASTEROIDS_SKIN;
+      const skin = skinRef.current;
       ctx.fillStyle = skin.bg;
       ctx.fillRect(0, 0, W, H);
 
