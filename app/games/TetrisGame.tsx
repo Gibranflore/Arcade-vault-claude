@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useCallback, useState } from "react";
 import type { GameProps } from "./types";
+import { DEFAULT_TETRIS_SKIN, type TetrisSkin } from "./tetrisSkins";
 
 const COLS = 10;
 const ROWS = 20;
@@ -10,17 +11,6 @@ const SIDEBAR_W = 150;
 const BOARD_W = COLS * BLOCK;
 const W = BOARD_W + SIDEBAR_W;
 const H = ROWS * BLOCK;
-
-const COLORS = [
-  null,
-  "#4dd0e1", // I - cyan
-  "#ffd54f", // O - yellow
-  "#ba68c8", // T - purple
-  "#81c784", // S - green
-  "#e57373", // Z - red
-  "#7986cb", // J - indigo
-  "#ffb74d", // L - orange
-] as const;
 
 const PIECES = [
   null,
@@ -179,12 +169,13 @@ function drawBlock(
   y: number,
   colorIndex: number,
   size: number,
+  skin: TetrisSkin,
   alpha = 1,
 ) {
   if (!colorIndex) return;
-  const color = COLORS[colorIndex];
+  const color = skin.pieceColors[colorIndex - 1];
   ctx.globalAlpha = alpha;
-  ctx.fillStyle = color!;
+  ctx.fillStyle = color;
   ctx.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
   ctx.fillStyle = "rgba(255,255,255,0.12)";
   ctx.fillRect(x * size + 1, y * size + 1, size - 2, 4);
@@ -198,10 +189,15 @@ export function TetrisGame({
   onGameOver,
   onReady,
   isPaused,
-}: GameProps) {
+  skin = DEFAULT_TETRIS_SKIN,
+}: GameProps & { skin?: TetrisSkin }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [running, setRunning] = useState(false);
   const stateRef = useRef(createInitialState());
+  const skinRef = useRef(skin);
+  useEffect(() => {
+    skinRef.current = skin;
+  }, [skin]);
 
   const reset = useCallback(() => {
     stateRef.current = createInitialState();
@@ -327,10 +323,11 @@ export function TetrisGame({
 
     const draw = () => {
       const s = stateRef.current;
-      ctx.fillStyle = "#000";
+      const skin = skinRef.current;
+      ctx.fillStyle = skin.bg;
       ctx.fillRect(0, 0, W, H);
 
-      ctx.strokeStyle = "#22222e";
+      ctx.strokeStyle = skin.gridLine;
       ctx.lineWidth = 0.5;
       for (let c = 1; c < COLS; c++) {
         ctx.beginPath();
@@ -347,7 +344,7 @@ export function TetrisGame({
 
       for (let r = 0; r < ROWS; r++)
         for (let c = 0; c < COLS; c++)
-          drawBlock(ctx, c, r, s.board[r][c], BLOCK);
+          drawBlock(ctx, c, r, s.board[r][c], BLOCK, skin);
 
       const gy = ghostY(s);
       for (let r = 0; r < s.current.shape.length; r++)
@@ -359,6 +356,7 @@ export function TetrisGame({
               gy + r,
               s.current.shape[r][c],
               BLOCK,
+              skin,
               0.2,
             );
 
@@ -371,9 +369,10 @@ export function TetrisGame({
               s.current.y + r,
               s.current.shape[r][c],
               BLOCK,
+              skin,
             );
 
-      ctx.fillStyle = "#888";
+      ctx.fillStyle = skin.sidebarText;
       ctx.font = "12px monospace";
       ctx.fillText("SIGUIENTE", BOARD_W + 20, 30);
 
@@ -385,7 +384,7 @@ export function TetrisGame({
         for (let c = 0; c < shape[r].length; c++) {
           if (!shape[r][c]) continue;
           ctx.globalAlpha = 1;
-          ctx.fillStyle = COLORS[shape[r][c]]!;
+          ctx.fillStyle = skin.pieceColors[shape[r][c] - 1];
           ctx.fillRect(offX + c * NB + 1, offY + r * NB + 1, NB - 2, NB - 2);
         }
     };
