@@ -1,6 +1,6 @@
 # Spec 08 — Sistema de skins visuales (Breakout y Tetris)
 
-- **Estado:** Aprobado
+- **Estado:** Implementado
 - **Dependencias:** Spec 05 (Asteroids jugable), Spec 07 (Sistema de skins visuales — Asteroids)
 - **Fecha:** 2026-08-14
 
@@ -187,20 +187,20 @@ const GAME_SKINS: Record<
 
 ## Criterios de aceptación
 
-- [ ] `npm run dev` levanta la app sin errores.
-- [ ] `app/games/breakoutSkins.ts` existe con el tipo `BreakoutSkin` y las 3 paletas (`classic`/`neon`/`retro`) con los valores hex definidos en el modelo de datos.
-- [ ] `app/games/tetrisSkins.ts` existe con el tipo `TetrisSkin` y las 3 paletas (`classic`/`neon`/`retro`) con los valores hex definidos en el modelo de datos.
-- [ ] En `/juegos/breakout/jugar`, el HUD superior muestra 3 botones de skin (Clásico/Neon/Retro), con "Clásico" activo por defecto la primera vez (sin `localStorage` previo).
-- [ ] En `/juegos/tetris/jugar`, el HUD superior muestra 3 botones de skin (Clásico/Neon/Retro), con "Clásico" activo por defecto la primera vez.
-- [ ] Cambiar de skin en Breakout actualiza inmediatamente los colores del canvas (fondo, bloques por fila, indestructibles, borde, paddle, pelota) sin reiniciar la partida en curso.
-- [ ] Cambiar de skin en Tetris actualiza inmediatamente los colores del canvas (fondo, grilla, las 7 piezas, texto sidebar) sin reiniciar la partida en curso.
-- [ ] El comportamiento de cada juego (física/colisiones en Breakout; rotación/colisión/líneas en Tetris; puntuación, niveles, game over) es idéntico entre las 3 skins — solo cambian colores.
-- [ ] La skin elegida persiste en `localStorage` bajo claves independientes (`skin:breakout`, `skin:tetris`) y se recupera correctamente tras recargar la página, sin interferir entre sí ni con `skin:asteroids`.
-- [ ] El selector de skin de Asteroids (`skin:asteroids`) sigue funcionando exactamente igual que antes de este spec tras el refactor del HUD a `GAME_SKINS`.
-- [ ] El selector de skin solo aparece cuando el juego activo está en `GAME_SKINS` (Asteroids/Breakout/Tetris); en Frogger/Snake (sin componente jugable) el HUD no lo muestra ni rompe el render.
-- [ ] Un usuario sin sesión iniciada puede cambiar de skin igual que uno con sesión (persistencia en `localStorage` no depende de `useAuth()`).
-- [ ] `npm run lint` pasa sin errores nuevos.
-- [ ] Verificación funcional con Playwright realizada: cambio de skin en vivo durante partida en Breakout y Tetris, persistencia tras reload por juego, y no regresión en Asteroids, antes de cerrar el spec.
+- [x] `npm run dev` levanta la app sin errores.
+- [x] `app/games/breakoutSkins.ts` existe con el tipo `BreakoutSkin` y las 3 paletas (`classic`/`neon`/`retro`) con los valores hex definidos en el modelo de datos.
+- [x] `app/games/tetrisSkins.ts` existe con el tipo `TetrisSkin` y las 3 paletas (`classic`/`neon`/`retro`) con los valores hex definidos en el modelo de datos.
+- [x] En `/juegos/breakout/jugar`, el HUD superior muestra 3 botones de skin (Clásico/Neon/Retro), con "Clásico" activo por defecto la primera vez (sin `localStorage` previo).
+- [x] En `/juegos/tetris/jugar`, el HUD superior muestra 3 botones de skin (Clásico/Neon/Retro), con "Clásico" activo por defecto la primera vez.
+- [x] Cambiar de skin en Breakout actualiza inmediatamente los colores del canvas (fondo, bloques por fila, indestructibles, borde, paddle, pelota) sin reiniciar la partida en curso.
+- [x] Cambiar de skin en Tetris actualiza inmediatamente los colores del canvas (fondo, grilla, las 7 piezas, texto sidebar) sin reiniciar la partida en curso.
+- [x] El comportamiento de cada juego (física/colisiones en Breakout; rotación/colisión/líneas en Tetris; puntuación, niveles, game over) es idéntico entre las 3 skins — solo cambian colores.
+- [x] La skin elegida persiste en `localStorage` bajo claves independientes (`skin:breakout`, `skin:tetris`) y se recupera correctamente tras recargar la página, sin interferir entre sí ni con `skin:asteroids`.
+- [x] El selector de skin de Asteroids (`skin:asteroids`) sigue funcionando exactamente igual que antes de este spec tras el refactor del HUD a `GAME_SKINS`.
+- [x] El selector de skin solo aparece cuando el juego activo está en `GAME_SKINS` (Asteroids/Breakout/Tetris); en Frogger/Snake (sin componente jugable) el HUD no lo muestra ni rompe el render.
+- [x] Un usuario sin sesión iniciada puede cambiar de skin igual que uno con sesión (persistencia en `localStorage` no depende de `useAuth()`).
+- [x] `npm run lint` pasa sin errores nuevos.
+- [x] Verificación funcional con Playwright realizada: cambio de skin en vivo durante partida en Breakout y Tetris, persistencia tras reload por juego, y no regresión en Asteroids, antes de cerrar el spec.
 
 ## Decisiones tomadas y descartadas
 

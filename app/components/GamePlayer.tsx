@@ -22,30 +22,63 @@ import { BreakoutGame } from "@/app/games/BreakoutGame";
 import { FroggerGame } from "@/app/games/FroggerGame";
 import { SnakeGame } from "@/app/games/SnakeGame";
 import type { GameHandle, GameProps } from "@/app/games/types";
-import {
-  ASTEROIDS_SKINS,
-  type AsteroidsSkin,
-} from "@/app/games/asteroidsSkins";
+import { ASTEROIDS_SKINS } from "@/app/games/asteroidsSkins";
+import { BREAKOUT_SKINS } from "@/app/games/breakoutSkins";
+import { TETRIS_SKINS } from "@/app/games/tetrisSkins";
 
-const ASTEROIDS_SKIN_STORAGE_KEY = "skin:asteroids";
+type SkinId = "classic" | "neon" | "retro";
+
+// Registry of per-game skin options for the HUD selector below. To add skins
+// for a new game: define its palettes (see app/games/*Skins.ts), add an
+// entry here, and spread `skin: <GAME>_SKINS[skinId]` into its GameComponent.
+const GAME_SKINS: Record<
+  string,
+  { options: { id: SkinId; label: string }[]; defaultId: SkinId }
+> = {
+  asteroids: {
+    options: Object.values(ASTEROIDS_SKINS).map((s) => ({
+      id: s.id,
+      label: s.label,
+    })),
+    defaultId: "classic",
+  },
+  breakout: {
+    options: Object.values(BREAKOUT_SKINS).map((s) => ({
+      id: s.id,
+      label: s.label,
+    })),
+    defaultId: "classic",
+  },
+  tetris: {
+    options: Object.values(TETRIS_SKINS).map((s) => ({
+      id: s.id,
+      label: s.label,
+    })),
+    defaultId: "classic",
+  },
+};
 
 function subscribeNoop() {
   return () => {};
 }
 
-function getStoredAsteroidsSkinId(): AsteroidsSkin["id"] {
+function readSkinId(gameId: string, defaultId: SkinId): SkinId {
   try {
-    const stored = localStorage.getItem(ASTEROIDS_SKIN_STORAGE_KEY);
-    if (stored && stored in ASTEROIDS_SKINS)
-      return stored as AsteroidsSkin["id"];
+    const stored = localStorage.getItem(`skin:${gameId}`);
+    if (stored === "classic" || stored === "neon" || stored === "retro")
+      return stored;
   } catch {
     // localStorage unavailable (private browsing, etc.) — keep default
   }
-  return "classic";
+  return defaultId;
 }
 
-function getServerAsteroidsSkinId(): AsteroidsSkin["id"] {
-  return "classic";
+function writeSkinId(gameId: string, id: SkinId) {
+  try {
+    localStorage.setItem(`skin:${gameId}`, id);
+  } catch {
+    // localStorage unavailable — skin still applies for this session
+  }
 }
 
 type GameState = "idle" | "playing" | "paused" | "over";
@@ -87,28 +120,23 @@ export function GamePlayer({ game }: { game: GameDef }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const storedAsteroidsSkinId = useSyncExternalStore(
+  const skinConfig = GAME_SKINS[game.id];
+  const storedSkinId = useSyncExternalStore(
     subscribeNoop,
-    getStoredAsteroidsSkinId,
-    getServerAsteroidsSkinId,
+    () => readSkinId(game.id, skinConfig?.defaultId ?? "classic"),
+    () => skinConfig?.defaultId ?? "classic",
   );
-  const [asteroidsSkinOverride, setAsteroidsSkinOverride] = useState<
-    AsteroidsSkin["id"] | null
-  >(null);
-  const asteroidsSkinId =
-    game.id === "asteroids"
-      ? (asteroidsSkinOverride ?? storedAsteroidsSkinId)
-      : "classic";
+  const [skinOverride, setSkinOverride] = useState<SkinId | null>(null);
+  const skinId = skinOverride ?? storedSkinId;
   const gameRef = useRef<GameHandle | null>(null);
 
-  const handleSkinChange = useCallback((id: AsteroidsSkin["id"]) => {
-    setAsteroidsSkinOverride(id);
-    try {
-      localStorage.setItem(ASTEROIDS_SKIN_STORAGE_KEY, id);
-    } catch {
-      // localStorage unavailable — skin still applies for this session
-    }
-  }, []);
+  const handleSkinChange = useCallback(
+    (id: SkinId) => {
+      setSkinOverride(id);
+      writeSkinId(game.id, id);
+    },
+    [game.id],
+  );
 
   const handleScoreChange = useCallback((s: number) => setScore(s), []);
   const handleLivesChange = useCallback((l: number) => setLives(l), []);
@@ -283,23 +311,23 @@ export function GamePlayer({ game }: { game: GameDef }) {
               </span>
               <span className="font-pixel text-sm text-white">{level}</span>
             </div>
-            {game.id === "asteroids" && (
+            {skinConfig && (
               <div className="flex flex-col items-end">
                 <span className="font-pixel text-[8px] text-gray-500 uppercase">
                   Skin
                 </span>
                 <span className="flex items-center gap-1">
-                  {Object.values(ASTEROIDS_SKINS).map((s) => (
+                  {skinConfig.options.map((opt) => (
                     <button
-                      key={s.id}
-                      onClick={() => handleSkinChange(s.id)}
+                      key={opt.id}
+                      onClick={() => handleSkinChange(opt.id)}
                       className={`px-1.5 py-0.5 font-mono text-[10px] border rounded transition-all active:scale-95 ${
-                        asteroidsSkinId === s.id
+                        skinId === opt.id
                           ? `${a} border-current`
                           : "text-gray-500 border-vault-border hover:text-gray-300"
                       }`}
                     >
-                      {s.label}
+                      {opt.label}
                     </button>
                   ))}
                 </span>
@@ -356,7 +384,13 @@ export function GamePlayer({ game }: { game: GameDef }) {
                 }}
                 isPaused={gameState === "paused"}
                 {...(game.id === "asteroids"
-                  ? { skin: ASTEROIDS_SKINS[asteroidsSkinId] }
+                  ? { skin: ASTEROIDS_SKINS[skinId] }
+                  : {})}
+                {...(game.id === "breakout"
+                  ? { skin: BREAKOUT_SKINS[skinId] }
+                  : {})}
+                {...(game.id === "tetris"
+                  ? { skin: TETRIS_SKINS[skinId] }
                   : {})}
               />
 
