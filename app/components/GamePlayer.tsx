@@ -20,6 +20,7 @@ import { AsteroidsGame } from "@/app/games/AsteroidsGame";
 import { TetrisGame } from "@/app/games/TetrisGame";
 import { BreakoutGame } from "@/app/games/BreakoutGame";
 import { FroggerGame } from "@/app/games/FroggerGame";
+import { SnakeGame } from "@/app/games/SnakeGame";
 import type { GameHandle, GameProps } from "@/app/games/types";
 import {
   ASTEROIDS_SKINS,
@@ -57,6 +58,7 @@ const GAME_COMPONENTS: Record<string, ComponentType<GameProps>> = {
   tetris: TetrisGame,
   breakout: BreakoutGame,
   frogger: FroggerGame,
+  snake: SnakeGame,
 };
 
 const accentMap = {
