@@ -25,6 +25,8 @@ import type { GameHandle, GameProps } from "@/app/games/types";
 import { ASTEROIDS_SKINS } from "@/app/games/asteroidsSkins";
 import { BREAKOUT_SKINS } from "@/app/games/breakoutSkins";
 import { TETRIS_SKINS } from "@/app/games/tetrisSkins";
+import { FROGGER_SKINS } from "@/app/games/froggerSkins";
+import { SNAKE_SKINS } from "@/app/games/snakeSkins";
 
 type SkinId = "classic" | "neon" | "retro";
 
@@ -51,6 +53,20 @@ const GAME_SKINS: Record<
   },
   tetris: {
     options: Object.values(TETRIS_SKINS).map((s) => ({
+      id: s.id,
+      label: s.label,
+    })),
+    defaultId: "classic",
+  },
+  frogger: {
+    options: Object.values(FROGGER_SKINS).map((s) => ({
+      id: s.id,
+      label: s.label,
+    })),
+    defaultId: "classic",
+  },
+  snake: {
+    options: Object.values(SNAKE_SKINS).map((s) => ({
       id: s.id,
       label: s.label,
     })),
@@ -392,6 +408,10 @@ export function GamePlayer({ game }: { game: GameDef }) {
                 {...(game.id === "tetris"
                   ? { skin: TETRIS_SKINS[skinId] }
                   : {})}
+                {...(game.id === "frogger"
+                  ? { skin: FROGGER_SKINS[skinId] }
+                  : {})}
+                {...(game.id === "snake" ? { skin: SNAKE_SKINS[skinId] } : {})}
               />
 
               {/* Idle overlay */}

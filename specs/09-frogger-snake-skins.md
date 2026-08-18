@@ -1,6 +1,6 @@
 # Spec 09 — Sistema de skins visuales (Frogger y Snake)
 
-- **Estado:** Aprobado
+- **Estado:** Implementado
 - **Dependencias:** Spec 05 (Asteroids jugable), Spec 07 (Sistema de skins visuales — Asteroids), Spec 08 (Sistema de skins visuales — Breakout y Tetris; **debe estar implementado**, ya que este spec extiende el registro `GAME_SKINS` que introduce)
 - **Fecha:** 2026-08-15
 

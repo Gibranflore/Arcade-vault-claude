@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useCallback, useState } from "react";
 import type { GameProps } from "./types";
+import { DEFAULT_SNAKE_SKIN, type SnakeSkin } from "./snakeSkins";
 
 const CELL = 20;
 const COLS = 40;
@@ -77,15 +78,19 @@ function createInitialState(): SnakeState {
   };
 }
 
-function drawScene(ctx: CanvasRenderingContext2D, s: SnakeState) {
-  ctx.fillStyle = "#000000";
+function drawScene(
+  ctx: CanvasRenderingContext2D,
+  s: SnakeState,
+  skin: SnakeSkin,
+) {
+  ctx.fillStyle = skin.bg;
   ctx.fillRect(0, 0, W, H);
 
-  ctx.fillStyle = "#f5ff00";
+  ctx.fillStyle = skin.food;
   ctx.fillRect(s.food.x * CELL + 2, s.food.y * CELL + 2, CELL - 4, CELL - 4);
 
   s.snake.forEach((segment, i) => {
-    ctx.fillStyle = i === 0 ? "#7cff5c" : "#39ff14";
+    ctx.fillStyle = i === 0 ? skin.head : skin.body;
     ctx.fillRect(
       segment.x * CELL + 1,
       segment.y * CELL + 1,
@@ -102,11 +107,16 @@ export function SnakeGame({
   onGameOver,
   onReady,
   isPaused,
-}: GameProps) {
+  skin = DEFAULT_SNAKE_SKIN,
+}: GameProps & { skin?: SnakeSkin }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [running, setRunning] = useState(false);
   const nextDirectionRef = useRef<Direction>("right");
   const stateRef = useRef(createInitialState());
+  const skinRef = useRef(skin);
+  useEffect(() => {
+    skinRef.current = skin;
+  }, [skin]);
 
   const reset = useCallback(() => {
     stateRef.current = createInitialState();
@@ -213,7 +223,7 @@ export function SnakeGame({
       }
     };
 
-    const draw = () => drawScene(ctx, stateRef.current);
+    const draw = () => drawScene(ctx, stateRef.current, skinRef.current);
 
     const loop = (ts: number) => {
       const dt = last === null ? 0 : ts - last;

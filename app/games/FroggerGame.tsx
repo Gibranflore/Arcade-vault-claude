@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useCallback, useState } from "react";
 import type { GameProps } from "./types";
+import { DEFAULT_FROGGER_SKIN, type FroggerSkin } from "./froggerSkins";
 
 const CELL = 50;
 const COLS = 16;
@@ -134,22 +135,26 @@ function createInitialState(): FroggerState {
   };
 }
 
-function drawScene(ctx: CanvasRenderingContext2D, s: FroggerState) {
+function drawScene(
+  ctx: CanvasRenderingContext2D,
+  s: FroggerState,
+  skin: FroggerSkin,
+) {
   ctx.clearRect(0, 0, W, H);
 
   for (const lane of s.lanes) {
     const y = lane.row * CELL;
     if (lane.type === "goal") {
-      ctx.fillStyle = "#0d2b1f";
+      ctx.fillStyle = skin.laneGoal;
       ctx.fillRect(0, y, W, CELL);
     } else if (lane.type === "safe") {
-      ctx.fillStyle = "#123a24";
+      ctx.fillStyle = skin.laneSafe;
       ctx.fillRect(0, y, W, CELL);
     } else if (lane.type === "road") {
-      ctx.fillStyle = "#1c1c22";
+      ctx.fillStyle = skin.laneRoad;
       ctx.fillRect(0, y, W, CELL);
     } else {
-      ctx.fillStyle = "#0a2a4a";
+      ctx.fillStyle = skin.laneRiver;
       ctx.fillRect(0, y, W, CELL);
     }
   }
@@ -158,8 +163,8 @@ function drawScene(ctx: CanvasRenderingContext2D, s: FroggerState) {
   const goalY = GOAL_ROW * CELL;
   for (let i = 0; i < GOAL_COLS.length; i++) {
     const cx = GOAL_COLS[i] * CELL + CELL / 2;
-    ctx.fillStyle = s.goals[i] ? "#39ff14" : "#0a1a12";
-    ctx.strokeStyle = "#39ff14";
+    ctx.fillStyle = s.goals[i] ? skin.goalActive : skin.goalInactive;
+    ctx.strokeStyle = skin.goalBorder;
     ctx.lineWidth = 2;
     ctx.fillRect(cx - 20, goalY + 6, 40, CELL - 12);
     ctx.strokeRect(cx - 20, goalY + 6, 40, CELL - 12);
@@ -171,17 +176,17 @@ function drawScene(ctx: CanvasRenderingContext2D, s: FroggerState) {
     for (const e of lane.entities) {
       const half = e.width / 2;
       if (lane.type === "road") {
-        ctx.fillStyle = e.kind === "truck" ? "#ff8c00" : "#ff3860";
+        ctx.fillStyle = e.kind === "truck" ? skin.truck : skin.car;
         ctx.fillRect(e.x - half, y + 6, e.width, CELL - 12);
       } else {
-        ctx.fillStyle = e.kind === "crocodile" ? "#2f6b2f" : "#8a5a2b";
+        ctx.fillStyle = e.kind === "crocodile" ? skin.crocodile : skin.log;
         ctx.fillRect(e.x - half, y + 8, e.width, CELL - 16);
         if (e.kind === "crocodile") {
           const mouthCx =
             lane.direction === 1
               ? e.x + half - MOUTH_WIDTH / 2
               : e.x - half + MOUTH_WIDTH / 2;
-          ctx.fillStyle = "#ff003c";
+          ctx.fillStyle = skin.crocodileMouth;
           ctx.fillRect(
             mouthCx - MOUTH_WIDTH / 2,
             y + 8,
@@ -195,11 +200,11 @@ function drawScene(ctx: CanvasRenderingContext2D, s: FroggerState) {
 
   // Frog
   const fy = s.frog.row * CELL + CELL / 2;
-  ctx.fillStyle = "#39ff14";
+  ctx.fillStyle = skin.frog;
   ctx.beginPath();
   ctx.arc(s.frog.x, fy, FROG_HALF, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#0a1a12";
+  ctx.fillStyle = skin.frogEyes;
   ctx.beginPath();
   ctx.arc(s.frog.x - 6, fy - 6, 3, 0, Math.PI * 2);
   ctx.arc(s.frog.x + 6, fy - 6, 3, 0, Math.PI * 2);
@@ -213,12 +218,17 @@ export function FroggerGame({
   onGameOver,
   onReady,
   isPaused,
-}: GameProps) {
+  skin = DEFAULT_FROGGER_SKIN,
+}: GameProps & { skin?: FroggerSkin }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [running, setRunning] = useState(false);
   const keysRef = useRef<Record<string, boolean>>({});
   const cooldownRef = useRef(0);
   const stateRef = useRef(createInitialState());
+  const skinRef = useRef(skin);
+  useEffect(() => {
+    skinRef.current = skin;
+  }, [skin]);
 
   const reset = useCallback(() => {
     stateRef.current = createInitialState();
@@ -417,7 +427,7 @@ export function FroggerGame({
       if (s.score !== scoreBefore) onScore(s.score);
     };
 
-    const draw = () => drawScene(ctx, stateRef.current);
+    const draw = () => drawScene(ctx, stateRef.current, skinRef.current);
 
     const loop = (ts: number) => {
       const dt = last === null ? 0 : Math.min((ts - last) / 1000, 0.05);
