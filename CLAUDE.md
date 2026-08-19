@@ -26,6 +26,11 @@ There is no test runner configured yet. A Prettier + ESLint `PostToolUse` hook (
 
 These skills are installed under `.claude/skills/` (`spec`, `spec-impl`, `add-game`) — no need to run the `npx skills@latest add Klerith/fernando-skills` install step referenced in the README, it's already done.
 
+## Agents
+
+- `@game-planner` — subagente de proyecto (`.claude/agents/game-planner.md`) que piensa y decide qué juegos nuevos encajan con la plataforma. Solo lectura del repo (más edición de su propio archivo de memoria); no implementa juegos, no toca `games.ts` ni `GamePlayer.tsx`. Mantiene un historial de sugerencias previas en `.claude/agents/game-planner-memory.md` para no repetir ideas entre sesiones. Para construir un juego que sugiera, usar `/add-game` (o `/spec`).
+- `@skin-designer` — subagente de proyecto (`.claude/agents/skin-designer.md`) que audita si cada juego tiene al menos 3 skins (Clásico/default, Neon, Retro) y propone paletas de color concretas por juego. Solo lectura del repo (más edición de su propio archivo de memoria); no implementa el sistema de skins ni toca código de juegos. Mantiene historial de propuestas en `.claude/agents/skin-designer-memory.md`. Actualmente no existe ningún sistema de skins implementado en la plataforma — para diseñar cómo se integraría (cambio de contrato `GameProps`/`GameHandle`), usar `/spec` primero.
+
 ## Architecture
 
 - Next.js 16.2.10 (App Router) + React 19, TypeScript, Tailwind CSS v4 (via `@tailwindcss/postcss`).

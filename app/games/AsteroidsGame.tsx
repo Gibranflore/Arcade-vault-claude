@@ -2,6 +2,8 @@
 
 import { useRef, useEffect, useCallback, useState } from "react";
 import type { GameProps } from "./types";
+import type { AsteroidsSkin } from "./asteroidsSkins";
+import { DEFAULT_ASTEROIDS_SKIN } from "./asteroidsSkins";
 
 const W = 800;
 const H = 600;
@@ -12,6 +14,11 @@ const wrap = (v: number, max: number) => ((v % max) + max) % max;
 const rand = (min: number, max: number) => min + Math.random() * (max - min);
 const randInt = (min: number, max: number) => Math.floor(rand(min, max + 1));
 const dist = (a: Vec, b: Vec) => Math.hypot(a.x - b.x, a.y - b.y);
+
+const hexToRgb = (hex: string) => {
+  const n = parseInt(hex.replace("#", ""), 16);
+  return `${(n >> 16) & 255},${(n >> 8) & 255},${n & 255}`;
+};
 
 const RADII = [0, 16, 30, 50]; // por tamaño 1, 2, 3
 const SPEEDS = [0, 85, 55, 32]; // velocidad base por tamaño
@@ -41,8 +48,8 @@ class Bullet {
     if (this.ttl <= 0) this.dead = true;
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
-    ctx.fillStyle = "#fff";
+  draw(ctx: CanvasRenderingContext2D, skin: AsteroidsSkin) {
+    ctx.fillStyle = skin.bullet;
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fill();
@@ -119,11 +126,11 @@ class Asteroid {
     ];
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D, skin: AsteroidsSkin) {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.rot);
-    ctx.strokeStyle = "#fff";
+    ctx.strokeStyle = skin.asteroid;
     ctx.lineWidth = 1.5;
     ctx.lineJoin = "round";
 
@@ -215,7 +222,7 @@ class Ship {
     return [new Bullet(ox, oy, this.angle)];
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D, skin: AsteroidsSkin) {
     if (this.dead) return;
     if (this.invincible > 0 && Math.floor(this.invincible * 8) % 2 === 0)
       return;
@@ -223,7 +230,7 @@ class Ship {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
-    ctx.strokeStyle = "#fff";
+    ctx.strokeStyle = skin.ship;
     ctx.lineWidth = 1.5;
     ctx.lineJoin = "round";
 
@@ -240,7 +247,7 @@ class Ship {
       ctx.moveTo(-8, -4);
       ctx.lineTo(-8 - rand(6, 14), 0);
       ctx.lineTo(-8, 4);
-      ctx.strokeStyle = "rgba(255, 130, 0, 0.85)";
+      ctx.strokeStyle = skin.thruster;
       ctx.stroke();
     }
 
@@ -275,9 +282,9 @@ class Particle {
     if (this.ttl <= 0) this.dead = true;
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D, skin: AsteroidsSkin) {
     const alpha = this.ttl / this.life;
-    ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(2)})`;
+    ctx.strokeStyle = `rgba(${hexToRgb(skin.particle)},${alpha.toFixed(2)})`;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(this.x, this.y);
@@ -306,7 +313,7 @@ class PowerUp {
     this.rot += 1.5 * dt;
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D, skin: AsteroidsSkin) {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.rot);
@@ -314,7 +321,7 @@ class PowerUp {
     ctx.lineJoin = "round";
 
     if (this.type === "triple") {
-      ctx.strokeStyle = "#fff";
+      ctx.strokeStyle = skin.powerupTriple;
       ctx.beginPath();
       ctx.moveTo(this.radius, 0);
       ctx.lineTo(0, this.radius);
@@ -323,7 +330,7 @@ class PowerUp {
       ctx.closePath();
       ctx.stroke();
     } else if (this.type === "bomb") {
-      ctx.strokeStyle = "#f66";
+      ctx.strokeStyle = skin.powerupBomb;
       ctx.beginPath();
       ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
       ctx.stroke();
@@ -364,12 +371,17 @@ export function AsteroidsGame({
   onGameOver,
   onReady,
   isPaused,
-}: GameProps) {
+  skin = DEFAULT_ASTEROIDS_SKIN,
+}: GameProps & { skin?: AsteroidsSkin }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [running, setRunning] = useState(false);
   const keysRef = useRef<Record<string, boolean>>({});
   const spaceJustPressedRef = useRef(false);
   const stateRef = useRef(createInitialState());
+  const skinRef = useRef(skin);
+  useEffect(() => {
+    skinRef.current = skin;
+  }, [skin]);
 
   const spawnAsteroids = useCallback((count: number) => {
     const s = stateRef.current;
@@ -577,14 +589,15 @@ export function AsteroidsGame({
 
     const draw = () => {
       const s = stateRef.current;
-      ctx.fillStyle = "#000";
+      const skin = skinRef.current;
+      ctx.fillStyle = skin.bg;
       ctx.fillRect(0, 0, W, H);
 
-      s.particles.forEach((p) => p.draw(ctx));
-      s.powerups.forEach((p) => p.draw(ctx));
-      s.asteroids.forEach((a) => a.draw(ctx));
-      s.bullets.forEach((b) => b.draw(ctx));
-      s.ship.draw(ctx);
+      s.particles.forEach((p) => p.draw(ctx, skin));
+      s.powerups.forEach((p) => p.draw(ctx, skin));
+      s.asteroids.forEach((a) => a.draw(ctx, skin));
+      s.bullets.forEach((b) => b.draw(ctx, skin));
+      s.ship.draw(ctx, skin);
     };
 
     const loop = (ts: number) => {

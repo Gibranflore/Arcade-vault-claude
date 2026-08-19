@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useCallback, useState } from "react";
 import type { GameProps } from "./types";
+import { DEFAULT_BREAKOUT_SKIN, type BreakoutSkin } from "./breakoutSkins";
 
 const W = 800;
 const H = 600;
@@ -20,8 +21,6 @@ const BLOCK_CELL_W = W / BLOCK_COLS;
 const BLOCK_W = 78;
 const BLOCK_H = 26;
 const BLOCK_TOP_MARGIN = 70;
-const ROW_COLORS = ["#ff2bd6", "#00f5ff", "#39ff14", "#f5ff00", "#ff8c1a"];
-const INDESTRUCTIBLE_COLOR = "#666";
 const POINTS_PER_BLOCK = 10;
 
 type CellType = null | "block" | "indestructible";
@@ -175,7 +174,7 @@ type Block = {
   y: number;
   w: number;
   h: number;
-  color: string;
+  row: number;
   type: "block" | "indestructible";
   alive: boolean;
 };
@@ -192,8 +191,7 @@ function buildBlocks(levelIndex: number): Block[] {
         y: BLOCK_TOP_MARGIN + row * BLOCK_H,
         w: BLOCK_W,
         h: BLOCK_H,
-        color:
-          cell === "indestructible" ? INDESTRUCTIBLE_COLOR : ROW_COLORS[row],
+        row,
         type: cell,
         alive: true,
       });
@@ -223,12 +221,17 @@ export function BreakoutGame({
   onGameOver,
   onReady,
   isPaused,
-}: GameProps) {
+  skin = DEFAULT_BREAKOUT_SKIN,
+}: GameProps & { skin?: BreakoutSkin }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [running, setRunning] = useState(false);
   const keysRef = useRef<Record<string, boolean>>({});
   const launchRequestedRef = useRef(false);
   const stateRef = useRef(createInitialState());
+  const skinRef = useRef(skin);
+  useEffect(() => {
+    skinRef.current = skin;
+  }, [skin]);
 
   const attachBall = useCallback(() => {
     const s = stateRef.current;
@@ -455,23 +458,27 @@ export function BreakoutGame({
 
     const draw = () => {
       const s = stateRef.current;
-      ctx.fillStyle = "#000";
+      const skin = skinRef.current;
+      ctx.fillStyle = skin.bg;
       ctx.fillRect(0, 0, W, H);
 
       for (const block of s.blocks) {
         if (!block.alive) continue;
-        ctx.fillStyle = block.color;
+        ctx.fillStyle =
+          block.type === "indestructible"
+            ? skin.indestructible
+            : skin.rowColors[block.row];
         ctx.fillRect(block.x, block.y, block.w, block.h);
-        ctx.strokeStyle = "rgba(0,0,0,0.4)";
+        ctx.strokeStyle = skin.blockBorder;
         ctx.lineWidth = 2;
         ctx.strokeRect(block.x, block.y, block.w, block.h);
       }
 
-      ctx.fillStyle = "#fff";
+      ctx.fillStyle = skin.paddle;
       ctx.fillRect(s.paddle.x, PADDLE_Y, PADDLE_W, PADDLE_H);
 
       ctx.beginPath();
-      ctx.fillStyle = "#00f5ff";
+      ctx.fillStyle = skin.ball;
       ctx.arc(s.ball.x, s.ball.y, BALL_R, 0, Math.PI * 2);
       ctx.fill();
     };
