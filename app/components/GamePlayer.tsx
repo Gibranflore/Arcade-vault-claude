@@ -110,6 +110,161 @@ const GAME_COMPONENTS: Record<string, ComponentType<GameProps>> = {
   snake: SnakeGame,
 };
 
+type TouchButton = {
+  code: string; // KeyboardEvent.code a despachar en keydown/keyup
+  label: string; // texto/símbolo del botón (ej. "←", "↑", "DISPARAR")
+  className?: string; // clases extra para tamaño/posición dentro del grupo
+};
+
+type TouchControlLayout = {
+  left: TouchButton[]; // grupo de botones renderizado a la izquierda del canvas
+  right: TouchButton[]; // grupo de botones renderizado a la derecha del canvas
+};
+
+// Registry of per-game touch control layouts. To add controls for a new
+// game: define its layout here (buttons dispatch synthetic KeyboardEvents
+// reusing the game's existing keyboard listeners — see TouchControlButton).
+const GAME_TOUCH_CONTROLS: Record<string, TouchControlLayout> = {
+  asteroids: {
+    left: [
+      { code: "ArrowLeft", label: "←" },
+      { code: "ArrowUp", label: "↑" },
+      { code: "ArrowRight", label: "→" },
+    ],
+    right: [{ code: "Space", label: "DISPARAR", className: "w-20 h-20" }],
+  },
+  tetris: {
+    left: [
+      { code: "ArrowLeft", label: "←" },
+      { code: "ArrowDown", label: "↓" },
+      { code: "ArrowRight", label: "→" },
+    ],
+    right: [
+      { code: "ArrowUp", label: "ROTAR" },
+      { code: "Space", label: "CAER" },
+    ],
+  },
+  frogger: {
+    left: [
+      { code: "ArrowLeft", label: "←" },
+      { code: "ArrowUp", label: "↑" },
+      { code: "ArrowDown", label: "↓" },
+      { code: "ArrowRight", label: "→" },
+    ],
+    right: [],
+  },
+  snake: {
+    left: [
+      { code: "ArrowLeft", label: "←" },
+      { code: "ArrowUp", label: "↑" },
+      { code: "ArrowDown", label: "↓" },
+      { code: "ArrowRight", label: "→" },
+    ],
+    right: [],
+  },
+  // breakout: sin entrada — usa drag+tap directo sobre el canvas (ver BreakoutGame.tsx)
+};
+
+function isDpadGroup(buttons: TouchButton[]): boolean {
+  if (buttons.length !== 4) return false;
+  const codes = new Set(buttons.map((b) => b.code));
+  return (
+    codes.has("ArrowUp") &&
+    codes.has("ArrowDown") &&
+    codes.has("ArrowLeft") &&
+    codes.has("ArrowRight")
+  );
+}
+
+// Single touch button: dispatches one keydown on press and one keyup on
+// release/cancel/leave, so existing keyboard listeners in each GameComponent
+// react exactly as if the equivalent physical key had been pressed.
+function TouchControlButton({ button }: { button: TouchButton }) {
+  const pressedRef = useRef(false);
+
+  const dispatchKey = (type: "keydown" | "keyup") => {
+    window.dispatchEvent(new KeyboardEvent(type, { code: button.code }));
+  };
+
+  const handlePress = (e: React.PointerEvent) => {
+    e.preventDefault();
+    if (pressedRef.current) return;
+    pressedRef.current = true;
+    dispatchKey("keydown");
+  };
+
+  const handleRelease = (e: React.PointerEvent) => {
+    e.preventDefault();
+    if (!pressedRef.current) return;
+    pressedRef.current = false;
+    dispatchKey("keyup");
+  };
+
+  return (
+    <button
+      onPointerDown={handlePress}
+      onPointerUp={handleRelease}
+      onPointerCancel={handleRelease}
+      onPointerLeave={handleRelease}
+      className={`select-none flex items-center justify-center rounded-lg border-2 border-vault-border bg-black/60 font-pixel text-[10px] sm:text-xs text-white active:bg-white/20 active:scale-95 ${
+        button.className ?? "w-12 h-12 sm:w-14 sm:h-14"
+      }`}
+      style={{ touchAction: "none" }}
+    >
+      {button.label}
+    </button>
+  );
+}
+
+function TouchControlGroup({ buttons }: { buttons: TouchButton[] }) {
+  if (buttons.length === 0) return null;
+
+  if (isDpadGroup(buttons)) {
+    const byCode = Object.fromEntries(buttons.map((b) => [b.code, b]));
+    return (
+      <div className="grid grid-cols-3 grid-rows-3 gap-1">
+        <div />
+        <TouchControlButton button={byCode["ArrowUp"]} />
+        <div />
+        <TouchControlButton button={byCode["ArrowLeft"]} />
+        <div />
+        <TouchControlButton button={byCode["ArrowRight"]} />
+        <div />
+        <TouchControlButton button={byCode["ArrowDown"]} />
+        <div />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-end gap-2">
+      {buttons.map((btn) => (
+        <TouchControlButton key={btn.code} button={btn} />
+      ))}
+    </div>
+  );
+}
+
+// Mounted only while gameState === "playing" for games with a registered
+// layout. Renders left/right button groups in normal flow BELOW the game's
+// aspect-ratio container (not overlapping the canvas). Hidden at sm: and
+// above — only shown on narrow (mobile-sized) viewports, via a plain CSS
+// breakpoint rather than touch-device feature detection.
+function TouchControlsOverlay({ layout }: { layout: TouchControlLayout }) {
+  const hasRight = layout.right.length > 0;
+  return (
+    <div
+      className={`flex items-center gap-4 pt-3 pb-1 px-1 sm:hidden ${
+        hasRight ? "justify-between" : "justify-center"
+      }`}
+      style={{ touchAction: "none" }}
+    >
+      <TouchControlGroup buttons={layout.left} />
+      {hasRight && <TouchControlGroup buttons={layout.right} />}
+    </div>
+  );
+}
+
 const accentMap = {
   cyan: "text-neon-cyan",
   magenta: "text-neon-magenta",
@@ -538,6 +693,11 @@ export function GamePlayer({ game }: { game: GameDef }) {
               )}
             </div>
           </div>
+
+          {/* Touch controls, below the canvas (not overlapping the game) */}
+          {gameState === "playing" && GAME_TOUCH_CONTROLS[game.id] && (
+            <TouchControlsOverlay layout={GAME_TOUCH_CONTROLS[game.id]} />
+          )}
         </div>
       </div>
     </div>
