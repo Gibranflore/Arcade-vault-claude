@@ -245,7 +245,12 @@ export function SnakeGame({
       width={W}
       height={H}
       className="max-w-full max-h-full"
-      style={{ width: "100%", height: "100%", objectFit: "contain" }}
+      style={{
+        width: "100%",
+        height: "100%",
+        objectFit: "contain",
+        touchAction: "none",
+      }}
     />
   );
 }
