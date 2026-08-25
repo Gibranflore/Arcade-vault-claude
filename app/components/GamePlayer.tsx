@@ -128,21 +128,23 @@ type TouchControlLayout = {
 const GAME_TOUCH_CONTROLS: Record<string, TouchControlLayout> = {
   asteroids: {
     left: [
-      { code: "ArrowLeft", label: "←" },
       { code: "ArrowUp", label: "↑" },
+      { code: "ArrowDown", label: "↓", disabled: true },
+      { code: "ArrowLeft", label: "←" },
       { code: "ArrowRight", label: "→" },
     ],
-    right: [{ code: "Space", label: "DISPARAR", className: "w-20 h-20" }],
+    right: [{ code: "Space", label: "A" }],
   },
   tetris: {
     left: [
-      { code: "ArrowLeft", label: "←" },
+      { code: "ArrowUp", label: "↑", disabled: true },
       { code: "ArrowDown", label: "↓" },
+      { code: "ArrowLeft", label: "←" },
       { code: "ArrowRight", label: "→" },
     ],
     right: [
-      { code: "ArrowUp", label: "ROTAR" },
-      { code: "Space", label: "CAER" },
+      { code: "Space", label: "A" },
+      { code: "ArrowUp", label: "B" },
     ],
   },
   frogger: {
