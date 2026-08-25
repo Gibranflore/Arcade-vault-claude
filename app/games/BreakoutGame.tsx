@@ -312,11 +312,39 @@ export function BreakoutGame({
     const handleClick = () => {
       launchRequestedRef.current = true;
     };
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      if (!touch) return;
+      const rect = canvas.getBoundingClientRect();
+      const boxAspect = rect.width / rect.height;
+      const canvasAspect = W / H;
+      let dispW = rect.width;
+      let offsetX = 0;
+      if (boxAspect > canvasAspect) {
+        dispW = rect.height * canvasAspect;
+        offsetX = (rect.width - dispW) / 2;
+      }
+      const x = ((touch.clientX - rect.left - offsetX) / dispW) * W;
+      const s = stateRef.current;
+      s.paddle.x = Math.max(0, Math.min(W - PADDLE_W, x - PADDLE_W / 2));
+      if (s.ball.attached) attachBall();
+    };
+    const handleTouchStart = (e: TouchEvent) => {
+      e.preventDefault();
+      launchRequestedRef.current = true;
+    };
     canvas.addEventListener("mousemove", handleMove);
     canvas.addEventListener("click", handleClick);
+    canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+    canvas.addEventListener("touchstart", handleTouchStart, {
+      passive: false,
+    });
     return () => {
       canvas.removeEventListener("mousemove", handleMove);
       canvas.removeEventListener("click", handleClick);
+      canvas.removeEventListener("touchmove", handleTouchMove);
+      canvas.removeEventListener("touchstart", handleTouchStart);
     };
   }, [attachBall]);
 
@@ -503,7 +531,12 @@ export function BreakoutGame({
       width={W}
       height={H}
       className="max-w-full max-h-full"
-      style={{ width: "100%", height: "100%", objectFit: "contain" }}
+      style={{
+        width: "100%",
+        height: "100%",
+        objectFit: "contain",
+        touchAction: "none",
+      }}
     />
   );
 }
