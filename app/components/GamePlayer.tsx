@@ -111,9 +111,10 @@ const GAME_COMPONENTS: Record<string, ComponentType<GameProps>> = {
 };
 
 type TouchButton = {
-  code: string; // KeyboardEvent.code a despachar en keydown/keyup
-  label: string; // texto/símbolo del botón (ej. "←", "↑", "DISPARAR")
+  code: string; // KeyboardEvent.code a despachar en keydown/keyup (ignorado si disabled)
+  label: string; // texto/símbolo del botón (ej. "←", "↑", "A")
   className?: string; // clases extra para tamaño/posición dentro del grupo
+  disabled?: boolean; // true = botón inerte del D-pad (visual, sin handlers ni dispatch)
 };
 
 type TouchControlLayout = {
