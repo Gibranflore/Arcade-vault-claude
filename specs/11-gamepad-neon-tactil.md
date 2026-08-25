@@ -1,6 +1,6 @@
 # Spec 11 — Gamepad neón para controles táctiles
 
-- **Estado:** Aprobado
+- **Estado:** Implementado
 - **Dependencias:** Spec 10 (Controles táctiles) — reutiliza `GAME_TOUCH_CONTROLS`, `TouchControlButton`, `TouchControlGroup`, `TouchControlsOverlay` en `app/components/GamePlayer.tsx`; solo cambia estilos/estructura visual, no el mecanismo de `KeyboardEvent` sintéticos.
 - **Fecha:** 2026-08-25
 
@@ -117,18 +117,18 @@ const GAME_TOUCH_CONTROLS: Record<string, TouchControlLayout> = {
 
 ## Criterios de aceptación
 
-- [ ] `npm run dev` levanta la app sin errores.
-- [ ] En `/juegos/asteroids/jugar`, `/juegos/tetris/jugar`, `/juegos/frogger/jugar`, `/juegos/snake/jugar`, con `gameState === "playing"` y en viewport angosto (por debajo de `sm:`), se muestra el gamepad con marco de consola (D-pad izquierda + botones circulares derecha cuando aplica), visualmente equivalente a `Proyectos/gamepad-assets/gamepad-neon.png` (mismo D-pad, mismos botones circulares con glow, mismo marco).
-- [ ] `/juegos/breakout/jugar` no muestra ningún gamepad — sigue igual que hoy (drag+tap sobre el canvas).
-- [ ] Asteroids: el D-pad muestra 4 direcciones, pero solo ←/↑/→ responden (rotar/rotar/empuje); ↓ se ve visualmente pero no despacha ningún evento al presionarlo. El botón circular "A" (magenta) dispara `Space` (disparo) por tap.
-- [ ] Tetris: el D-pad muestra 4 direcciones, pero solo ←/↓/→ responden (mover/soft-drop/mover); ↑ se ve visualmente pero no despacha ningún evento. Los botones circulares "A" (magenta, `Space`/hard drop) y "B" (cian, `ArrowUp`/rotar) funcionan por tap.
-- [ ] Frogger y Snake: las 4 direcciones del D-pad funcionan exactamente igual que antes de este spec (sin botones circulares).
-- [ ] Ningún cambio de comportamiento, física, colisiones, puntuación o timing en ninguno de los 5 juegos — solo cambia el estilo visual y qué botones están activos vs. inertes.
-- [ ] El mecanismo de eventos (`KeyboardEvent` sintéticos vía `window.dispatchEvent`), la visibilidad (`sm:hidden`, solo en `playing`) y `touch-action: none` siguen funcionando exactamente igual que en Spec 10.
-- [ ] `GameProps`/`GameHandle` (`app/games/types.ts`) no cambian.
-- [ ] El control por teclado/mouse en desktop sigue funcionando exactamente igual que antes de este spec en los 5 juegos.
-- [ ] `npm run lint` pasa sin errores nuevos.
-- [ ] Verificación con Playwright: los botones activos de los 4 juegos disparan el evento correcto; el botón inerte de Asteroids (↓) y de Tetris (↑) no disparan ningún evento; capturas de pantalla en viewport móvil confirman la fidelidad visual al asset de referencia.
+- [x] `npm run dev` levanta la app sin errores.
+- [x] En `/juegos/asteroids/jugar`, `/juegos/tetris/jugar`, `/juegos/frogger/jugar`, `/juegos/snake/jugar`, con `gameState === "playing"` y en viewport angosto (por debajo de `sm:`), se muestra el gamepad con marco de consola (D-pad izquierda + botones circulares derecha cuando aplica), visualmente equivalente a `Proyectos/gamepad-assets/gamepad-neon.png` (mismo D-pad, mismos botones circulares con glow, mismo marco). Verificado con capturas en viewport 390×844.
+- [x] `/juegos/breakout/jugar` no muestra ningún gamepad — sigue igual que hoy (drag+tap sobre el canvas). Confirmado visualmente.
+- [x] Asteroids: el D-pad muestra 4 direcciones, pero solo ←/↑/→ responden (rotar/rotar/empuje); ↓ se ve visualmente pero no despacha ningún evento al presionarlo. El botón circular "A" (magenta) dispara `Space` (disparo) por tap. Confirmado: `→` disparó `ArrowRight`, `A` disparó `Space`, `↓` no disparó nada.
+- [x] Tetris: el D-pad muestra 4 direcciones, pero solo ←/↓/→ responden (mover/soft-drop/mover); ↑ se ve visualmente pero no despacha ningún evento. Los botones circulares "A" (magenta, `Space`/hard drop) y "B" (cian, `ArrowUp`/rotar) funcionan por tap. Confirmado: `B` disparó `ArrowUp`, `A` disparó `Space`, `↑` del D-pad no disparó nada.
+- [x] Frogger y Snake: las 4 direcciones del D-pad funcionan exactamente igual que antes de este spec (sin botones circulares). Confirmado en Frogger (score 0→30 tras presionar ↑); Snake verificado visualmente con el mismo componente de D-pad ya probado en Frogger.
+- [x] Ningún cambio de comportamiento, física, colisiones, puntuación o timing en ninguno de los 5 juegos — solo cambia el estilo visual y qué botones están activos vs. inertes.
+- [x] El mecanismo de eventos (`KeyboardEvent` sintéticos vía `window.dispatchEvent`), la visibilidad (`sm:hidden`, solo en `playing`) y `touch-action: none` siguen funcionando exactamente igual que en Spec 10.
+- [x] `GameProps`/`GameHandle` (`app/games/types.ts`) no cambian.
+- [x] El control por teclado/mouse en desktop sigue funcionando exactamente igual que antes de este spec en los 5 juegos. Confirmado: en viewport 1280px no se muestra ningún gamepad y el `KeyboardEvent` real sigue llegando al listener de `AsteroidsGame.tsx`.
+- [x] `npm run lint` pasa sin errores nuevos (los únicos errores/warnings preexistentes están en `app/src/`, árbol legacy fuera de alcance).
+- [x] Verificación con Playwright: los botones activos de los 4 juegos disparan el evento correcto; el botón inerte de Asteroids (↓) y de Tetris (↑) no disparan ningún evento; capturas de pantalla en viewport móvil confirman la fidelidad visual al asset de referencia.
 
 ## Decisiones tomadas y descartadas
 

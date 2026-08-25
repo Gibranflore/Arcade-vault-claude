@@ -179,11 +179,43 @@ function isDpadGroup(buttons: TouchButton[]): boolean {
   );
 }
 
+// Visual role of a touch button within the neon gamepad: "dpad" for the
+// square directional keys, "action-a"/"action-b" for the two circular
+// action buttons (magenta/cyan respectively, matching the Gamepad MK-II
+// reference asset). Defaults to "dpad" so existing call sites keep working
+// until callers are updated to pass the right variant.
+type TouchButtonVariant = "dpad" | "action-a" | "action-b";
+
+const DPAD_BASE =
+  "select-none flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-lg border border-white/5 bg-gradient-to-b from-[#1a1a25] to-[#0a0a12] text-white/50 font-pixel text-[10px] sm:text-xs shadow-[0_4px_0_#050507] transition-all duration-100";
+const DPAD_PRESSABLE =
+  "active:translate-y-[3px] active:text-neon-cyan active:border-neon-cyan/60 active:from-[#08161e] active:to-[#030a0e] active:shadow-[0_1px_0_#050507,0_0_16px_rgba(0,245,255,0.5)]";
+const DPAD_DISABLED = "opacity-30";
+
+const ACTION_BASE =
+  "select-none relative flex items-center justify-center w-16 h-16 sm:w-[4.5rem] sm:h-[4.5rem] rounded-full border-2 font-pixel text-lg sm:text-xl text-white transition-all duration-100 before:content-[''] before:absolute before:-inset-2 before:rounded-full before:border before:border-dashed before:border-current before:opacity-0 before:scale-90 before:transition-all before:duration-150";
+const ACTION_PRESSABLE =
+  "active:translate-y-[4px] active:scale-[0.97] active:before:opacity-100 active:before:scale-100";
+const ACTION_A_COLORS =
+  "border-neon-magenta bg-[radial-gradient(circle_at_32%_26%,rgba(255,255,255,0.25),transparent_50%),radial-gradient(circle_at_50%_55%,rgba(255,0,110,0.7),rgba(110,0,40,0.95)_75%)] shadow-[0_6px_0_#050507,0_0_22px_rgba(255,0,110,0.4)] active:shadow-[0_1px_0_#050507,0_0_36px_rgba(255,0,110,0.4)]";
+const ACTION_B_COLORS =
+  "border-neon-cyan bg-[radial-gradient(circle_at_32%_26%,rgba(255,255,255,0.25),transparent_50%),radial-gradient(circle_at_50%_55%,rgba(0,200,230,0.7),rgba(0,50,70,0.95)_75%)] shadow-[0_6px_0_#050507,0_0_22px_rgba(0,245,255,0.4)] active:shadow-[0_1px_0_#050507,0_0_36px_rgba(0,245,255,0.4)]";
+const ACTION_DISABLED = "opacity-30 border-white/10 bg-black/60";
+
 // Single touch button: dispatches one keydown on press and one keyup on
 // release/cancel/leave, so existing keyboard listeners in each GameComponent
 // react exactly as if the equivalent physical key had been pressed.
-function TouchControlButton({ button }: { button: TouchButton }) {
+// A `disabled` button (declared in GAME_TOUCH_CONTROLS for a direction a
+// game doesn't use) renders inert: no pointer handlers, no dispatch, dimmed.
+function TouchControlButton({
+  button,
+  variant = "dpad",
+}: {
+  button: TouchButton;
+  variant?: TouchButtonVariant;
+}) {
   const pressedRef = useRef(false);
+  const isDpad = variant === "dpad";
 
   const dispatchKey = (type: "keydown" | "keyup") => {
     window.dispatchEvent(new KeyboardEvent(type, { code: button.code }));
@@ -203,15 +235,32 @@ function TouchControlButton({ button }: { button: TouchButton }) {
     dispatchKey("keyup");
   };
 
+  if (button.disabled) {
+    return (
+      <div
+        aria-hidden="true"
+        className={`${isDpad ? DPAD_BASE : ACTION_BASE} ${
+          isDpad ? DPAD_DISABLED : ACTION_DISABLED
+        } ${button.className ?? ""}`}
+      >
+        {button.label}
+      </div>
+    );
+  }
+
+  const variantClasses = isDpad
+    ? `${DPAD_BASE} ${DPAD_PRESSABLE}`
+    : `${ACTION_BASE} ${ACTION_PRESSABLE} ${
+        variant === "action-a" ? ACTION_A_COLORS : ACTION_B_COLORS
+      }`;
+
   return (
     <button
       onPointerDown={handlePress}
       onPointerUp={handleRelease}
       onPointerCancel={handleRelease}
       onPointerLeave={handleRelease}
-      className={`select-none flex items-center justify-center rounded-lg border-2 border-vault-border bg-black/60 font-pixel text-[10px] sm:text-xs text-white active:bg-white/20 active:scale-95 ${
-        button.className ?? "w-12 h-12 sm:w-14 sm:h-14"
-      }`}
+      className={`${variantClasses} ${button.className ?? ""}`}
       style={{ touchAction: "none" }}
     >
       {button.label}
@@ -225,12 +274,14 @@ function TouchControlGroup({ buttons }: { buttons: TouchButton[] }) {
   if (isDpadGroup(buttons)) {
     const byCode = Object.fromEntries(buttons.map((b) => [b.code, b]));
     return (
-      <div className="grid grid-cols-3 grid-rows-3 gap-1">
+      <div className="relative grid grid-cols-3 grid-rows-3 gap-1">
         <div />
         <TouchControlButton button={byCode["ArrowUp"]} />
         <div />
         <TouchControlButton button={byCode["ArrowLeft"]} />
-        <div />
+        <div className="flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-md bg-[radial-gradient(circle_at_50%_50%,#181822_0%,#08080d_80%)] border border-neon-cyan/15 shadow-[inset_0_0_12px_rgba(0,0,0,0.8)]">
+          <span className="w-3 h-3 rotate-45 bg-neon-cyan shadow-[0_0_10px_var(--color-neon-cyan)] animate-pulse" />
+        </div>
         <TouchControlButton button={byCode["ArrowRight"]} />
         <div />
         <TouchControlButton button={byCode["ArrowDown"]} />
@@ -240,9 +291,13 @@ function TouchControlGroup({ buttons }: { buttons: TouchButton[] }) {
   }
 
   return (
-    <div className="flex items-end gap-2">
-      {buttons.map((btn) => (
-        <TouchControlButton key={btn.code} button={btn} />
+    <div className="flex items-center gap-3 sm:gap-4">
+      {buttons.map((btn, i) => (
+        <TouchControlButton
+          key={btn.code}
+          button={btn}
+          variant={i === 0 ? "action-a" : "action-b"}
+        />
       ))}
     </div>
   );
@@ -256,14 +311,18 @@ function TouchControlGroup({ buttons }: { buttons: TouchButton[] }) {
 function TouchControlsOverlay({ layout }: { layout: TouchControlLayout }) {
   const hasRight = layout.right.length > 0;
   return (
-    <div
-      className={`flex items-center gap-4 pt-3 pb-1 px-1 sm:hidden ${
-        hasRight ? "justify-between" : "justify-center"
-      }`}
-      style={{ touchAction: "none" }}
-    >
-      <TouchControlGroup buttons={layout.left} />
-      {hasRight && <TouchControlGroup buttons={layout.right} />}
+    <div className="pt-3 pb-1 px-1 sm:hidden" style={{ touchAction: "none" }}>
+      <div className="relative rounded-2xl border border-neon-cyan/20 bg-gradient-to-b from-[#1c1c28] to-[#0c0c14] px-4 py-4 shadow-[0_20px_50px_-20px_rgba(0,245,255,0.35),inset_0_1px_0_rgba(255,255,255,0.06),inset_0_-2px_0_rgba(0,0,0,0.6)]">
+        <div className="pointer-events-none absolute inset-1 rounded-xl border border-neon-cyan/10" />
+        <div
+          className={`relative flex items-center gap-4 ${
+            hasRight ? "justify-between" : "justify-center"
+          }`}
+        >
+          <TouchControlGroup buttons={layout.left} />
+          {hasRight && <TouchControlGroup buttons={layout.right} />}
+        </div>
+      </div>
     </div>
   );
 }
