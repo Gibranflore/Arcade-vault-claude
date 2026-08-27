@@ -18,3 +18,11 @@ Registro de temas procesados y conceptos de juego generados por el agente `@game
   - Frogger Clásico (`frogger`): tablero fijo de carriles horizontales (carretera + río), salto discreto por celda, arrastre solidario sobre troncos/cocodrilos, meta de 5 casas.
   - Hoppy Hazard (`hoppy-hazard`): scroll vertical infinito con salto automático (estilo Doodle Jump), control horizontal en el aire, agua ascendente y plataformas que se hunden (cocodrilos) o rebotan (troncos).
 - Estado: generado
+
+## piratas — Piratas del Caribe: barcos, tesoros, islas, combate naval, abordajes, mapas del tesoro, monstruos marinos (2026-08-27)
+
+- Carpeta: specs/game-jam-piratas/
+- Conceptos:
+  - Abordaje en Alta Mar (`abordaje-alta-mar`): shooter arcade naval, barco con balanceo automático sobre el oleaje, disparo de cañonazos con cooldown, oleadas de barcos enemigos + jefe kraken con ataque de tentáculos por columna.
+  - Cazador de Tesoros (`cazador-de-tesoros`): exploración por cuadrícula con niebla de guerra revelada por radio, movimiento discreto por celda, minijuego de barra de temporización para cavar tesoros, guardianes con rutas fijas y marea que inunda la isla por anillos.
+- Estado: generado
