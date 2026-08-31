@@ -18,3 +18,11 @@ Registro de temas procesados y conceptos de juego generados por el agente `@game
   - Frogger Clásico (`frogger`): tablero fijo de carriles horizontales (carretera + río), salto discreto por celda, arrastre solidario sobre troncos/cocodrilos, meta de 5 casas.
   - Hoppy Hazard (`hoppy-hazard`): scroll vertical infinito con salto automático (estilo Doodle Jump), control horizontal en el aire, agua ascendente y plataformas que se hunden (cocodrilos) o rebotan (troncos).
 - Estado: generado
+
+## circo — Circo: trapecistas, malabaristas, domadores, payasos, cañón humano, cuerda floja (2026-08-31)
+
+- Carpeta: specs/game-jam-circo/
+- Conceptos:
+  - Malabares Extremos (`malabares`): catcher de posicionamiento continuo — un malabarista se mueve horizontalmente para atrapar pelotas/antorchas/cuchillos que caen y se reciclan, con combo de puntaje y número creciente de objetos simultáneos.
+  - Funambulista Supremo (`funambulista`): auto-runner de equilibrio — avance automático sobre la cuerda floja, barra de balance empujada por ráfagas de viento/tropiezos que el jugador corrige con input continuo, salto de obstáculos y puntaje por distancia recorrida.
+- Estado: generado
