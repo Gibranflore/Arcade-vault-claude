@@ -18,3 +18,11 @@ Registro de temas procesados y conceptos de juego generados por el agente `@game
   - Frogger Clásico (`frogger`): tablero fijo de carriles horizontales (carretera + río), salto discreto por celda, arrastre solidario sobre troncos/cocodrilos, meta de 5 casas.
   - Hoppy Hazard (`hoppy-hazard`): scroll vertical infinito con salto automático (estilo Doodle Jump), control horizontal en el aire, agua ascendente y plataformas que se hunden (cocodrilos) o rebotan (troncos).
 - Estado: generado
+
+## piratas — Piratas: barcos, tesoros, islas, combate naval, kraken (2026-09-02)
+
+- Carpeta: specs/game-jam-piratas/
+- Conceptos:
+  - Cannon Storm (`cannon-storm`): combate naval top-down con inercia de barco, disparo exclusivamente broadside (babor/estribor con cooldown propio), oleadas de barcos enemigos con IA de aproximación/costado/retirada y ataques periódicos telegrafiados de un Kraken.
+  - Treasure Diver (`treasure-diver`): descenso vertical de un buzo con oxígeno limitado y mecánica de banking push-your-luck (el tesoro recogido solo cuenta al volver a la superficie), criaturas marinas que restan oxígeno y un Kraken de zonas profundas con telegraph.
+- Estado: generado
